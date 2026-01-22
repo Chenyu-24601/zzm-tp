@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 2 复习笔记 - 正则表达式与文档相似度</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+                         "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: #fff;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1a1a1a;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 40px 0 20px 0;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #3498db;
+        }
+        h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 35px 0 15px 0;
+            padding-left: 15px;
+            border-left: 5px solid #3498db;
+        }
+        h3 {
+            color: #34495e;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 25px 0 12px 0;
+        }
+        h4 {
+            color: #555;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+        }
+        p { margin: 12px 0; font-size: 15px; }
+        strong { color: #e74c3c; font-weight: 700; }
+        em { color: #16a085; font-style: italic; }
+        code {
+            background: #f5f5f5;
+            color: #c7254e;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            font-size: 14px;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            border-left: 4px solid #3498db;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        pre code {
+            background: transparent;
+            color: #24292e;
+            padding: 0;
+            font-size: 13px;
+            display: block;
+        }
+        ul, ol { margin: 15px 0; padding-left: 30px; }
+        li { margin: 8px 0; line-height: 1.8; }
+        blockquote {
+            background: #fff9e6;
+            border-left: 5px solid #f39c12;
+            padding: 15px 20px;
+            margin: 20px 0;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        table th {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+        }
+        table tr:nth-child(even) { background: #f8f9fa; }
+        hr { border: none; border-top: 2px solid #e1e4e8; margin: 30px 0; }
+        details {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #2e7d32;
+            padding: 5px;
+        }
+        summary:hover { color: #1b5e20; }
+        @media print {
+            body { padding: 20px; font-size: 12pt; }
+            h1 { page-break-before: always; font-size: 24pt; }
+            h1:first-of-type { page-break-before: avoid; }
+            h2 { page-break-after: avoid; font-size: 18pt; }
+            h3 { page-break-after: avoid; font-size: 14pt; }
+            pre, table { page-break-inside: avoid; }
+            code { font-size: 10pt; }
+            pre code { font-size: 9pt; }
+        }
+    </style>
+</head>
+<body>
+    <h1 id="lecture-2-">Lecture 2 超基础复习笔记 - 正则表达式与文档相似度</h1>
+<h2 id="_1">零、先理解问题（为什么需要这些？）</h2>
+<h3 id="_2">现实场景</h3>
+<p><strong>场景1：查找抄袭</strong></p>
+<div class="codehilite"><pre><span></span><code>你是老师，收到100篇作业
+怎么快速找出哪些作业内容相似（可能抄袭）？
+→ 需要计算文档相似度！
+</code></pre></div>
+
+<p><strong>场景2：新闻推荐</strong></p>
+<div class="codehilite"><pre><span></span><code>用户刚看了一篇关于&quot;足球&quot;的新闻
+怎么找出其他类似的足球新闻推荐给他？
+→ 需要比较新闻内容的相似度！
+</code></pre></div>
+
+<p><strong>场景3：提取文本中的单词</strong></p>
+<div class="codehilite"><pre><span></span><code>原文：Hello, World! How are you?
+只想要单词：Hello World How are you
+→ 需要用正则表达式提取单词！
+</code></pre></div>
+
+<hr />
+<h2 id="_3">一、正则表达式（超级简单版）</h2>
+<h3 id="_4">什么是正则表达式？</h3>
+<p><strong>正则表达式 = 文本匹配的模式（规则）</strong></p>
+<p>想象你在玩"找不同"游戏，需要一个规则来描述你要找什么。</p>
+<h3 id="_5">基本符号（必须记住！）</h3>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>意思</th>
+<th>例子</th>
+<th>匹配结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[A-Z]</code></td>
+<td>任意大写字母</td>
+<td><code>[A-Z]</code></td>
+<td>匹配：A, B, C, ..., Z</td>
+</tr>
+<tr>
+<td><code>[a-z]</code></td>
+<td>任意小写字母</td>
+<td><code>[a-z]</code></td>
+<td>匹配：a, b, c, ..., z</td>
+</tr>
+<tr>
+<td><code>[A-Za-z]</code></td>
+<td>任意字母</td>
+<td><code>[A-Za-z]</code></td>
+<td>匹配：a, A, b, B, ...</td>
+</tr>
+<tr>
+<td><code>+</code></td>
+<td><strong>至少1次</strong>（Kleene plus）</td>
+<td><code>[a-z]+</code></td>
+<td>匹配：a, ab, abc, hello</td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td><strong>0次或多次</strong>（Kleene star）</td>
+<td><code>[a-z]*</code></td>
+<td>匹配：(空), a, ab, abc</td>
+</tr>
+<tr>
+<td><code>[0-9]</code></td>
+<td>任意数字</td>
+<td><code>[0-9]+</code></td>
+<td>匹配：1, 23, 456</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">图解理解</h3>
+<h4 id="1a-za-z">例子1：<code>[A-Za-z]+</code> 的含义</h4>
+<div class="codehilite"><pre><span></span><code>[A-Za-z]  →  任意一个字母（大写或小写）
+       +  →  至少出现1次，可以多次
+
+匹配的例子：
+✅ &quot;Hello&quot;  （5个字母）
+✅ &quot;a&quot;      （1个字母）
+✅ &quot;ABC&quot;    （3个大写字母）
+❌ &quot;&quot;       （0个字母，不满足&quot;至少1次&quot;）
+❌ &quot;123&quot;    （不是字母）
+</code></pre></div>
+
+<h4 id="2a-z-vs-a-z">例子2：<code>[a-z]*</code> vs <code>[a-z]+</code></h4>
+<div class="codehilite"><pre><span></span><code>文本：&quot;Hello123World&quot;
+
+[a-z]+  →  只匹配：ello, orld  （至少1个小写字母）
+[a-z]*  →  匹配：H(空)e(空)l(空)l(空)o(空)1(空)2(空)3(空)W(空)o(空)r(空)l(空)d(空)
+           （可以是0个，所以到处都匹配）
+</code></pre></div>
+
+<p><strong>结论：一般用 <code>+</code> 更有用！</strong></p>
+<hr />
+<h2 id="python">二、Python 中使用正则表达式</h2>
+<h3 id="_7">基本步骤（三步走）</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>  <span class="c1"># 第1步：导入re模块</span>
+
+<span class="c1"># 第2步：编译正则表达式（创建匹配规则）</span>
+<span class="n">wordRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;[A-Za-z]+&#39;</span><span class="p">)</span>
+
+<span class="c1"># 第3步：用规则去匹配文本</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Hello, World! 123&quot;</span>
+<span class="n">words</span> <span class="o">=</span> <span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>  <span class="c1"># 输出：[&#39;Hello&#39;, &#39;World&#39;]</span>
+</code></pre></div>
+
+<h3 id="_8">详细解释每一步</h3>
+<h4 id="1import-re">第1步：<code>import re</code></h4>
+<ul>
+<li><code>re</code> 是 Python 内置的正则表达式模块</li>
+<li>就像 <code>import math</code> 一样，导入后才能用</li>
+</ul>
+<h4 id="2recompilea-za-z">第2步：<code>re.compile('[A-Za-z]+')</code></h4>
+<div class="codehilite"><pre><span></span><code><span class="n">wordRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;[A-Za-z]+&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>分解理解：</strong>
+- <code>re.compile()</code> - 把字符串变成"匹配规则"
+- <code>'[A-Za-z]+'</code> - 规则内容："1个或多个字母"
+- <code>wordRE</code> - 变量名，存储这个规则（像一个"筛子"）</p>
+<p><strong>为什么要compile？</strong>
+- 把规则"编译"一次，后面重复用很多次
+- 更快！如果不编译，每次匹配都要重新解析规则</p>
+<h4 id="3wordrefindalltext">第3步：<code>wordRE.findall(text)</code></h4>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Hello, World! 123&quot;</span>
+<span class="n">words</span> <span class="o">=</span> <span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="c1"># words = [&#39;Hello&#39;, &#39;World&#39;]</span>
+</code></pre></div>
+
+<p><strong>工作过程（图解）：</strong></p>
+<div class="codehilite"><pre><span></span><code>原文：H e l l o ,   W o r l d !   1 2 3
+
+规则：[A-Za-z]+ （找连续的字母）
+
+扫描：
+H → 字母✅，继续
+e → 字母✅，继续
+l → 字母✅，继续
+l → 字母✅，继续
+o → 字母✅，继续
+, → 不是字母❌，停止，输出&quot;Hello&quot;
+
+  → 空格，跳过
+W → 字母✅，开始新的匹配
+o → 字母✅，继续
+r → 字母✅，继续
+l → 字母✅，继续
+d → 字母✅，继续
+! → 不是字母❌，停止，输出&quot;World&quot;
+
+（后面的123都不是字母，跳过）
+
+最终结果：[&#39;Hello&#39;, &#39;World&#39;]
+</code></pre></div>
+
+<hr />
+<h2 id="jaccard">三、Jaccard 相似度（核心算法！）</h2>
+<h3 id="_9">什么是相似度？</h3>
+<p><strong>相似度 = 两个东西有多像</strong></p>
+<p>比如：
+- 双胞胎相似度很高（90%）
+- 陌生人相似度很低（10%）</p>
+<h3 id="jaccard_1">Jaccard 系数原理</h3>
+<p><strong>公式（数学版）：</strong></p>
+<div class="codehilite"><pre><span></span><code>J(A, B) = |A ∩ B| / |A ∪ B|
+</code></pre></div>
+
+<p><strong>公式（人话版）：</strong></p>
+<div class="codehilite"><pre><span></span><code>相似度 = 共同拥有的东西数量 / 总共拥有的东西数量
+</code></pre></div>
+
+<h3 id="_10">图解理解（超重要！）</h3>
+<h4 id="_11">例子：比较两个人的爱好</h4>
+<p><strong>小明的爱好：</strong><code>{足球, 篮球, 游泳}</code>
+<strong>小红的爱好：</strong><code>{篮球, 游泳, 跑步}</code></p>
+<div class="codehilite"><pre><span></span><code>第1步：找交集（共同爱好）
+A ∩ B = {篮球, 游泳}
+共同爱好数量 = 2
+
+第2步：找并集（所有爱好）
+A ∪ B = {足球, 篮球, 游泳, 跑步}
+所有爱好数量 = 4
+
+第3步：计算相似度
+J = 2 / 4 = 0.5  （50%相似）
+</code></pre></div>
+
+<p><strong>Venn图：</strong></p>
+<div class="codehilite"><pre><span></span><code>     小明          小红
+    ┌────┐      ┌────┐
+    │足球│      │跑步│
+    └────┘      └────┘
+       ┌──────────┐
+       │ 篮球游泳 │  ← 交集（共同部分）
+       └──────────┘
+</code></pre></div>
+
+<h3 id="_12">文档相似度的计算</h3>
+<h4 id="_13">简单例子（二进制权重）</h4>
+<p><strong>文档1：</strong>"我 爱 编程"
+<strong>文档2：</strong>"我 爱 音乐"</p>
+<div class="codehilite"><pre><span></span><code>文档1的词集合：{我, 爱, 编程}
+文档2的词集合：{我, 爱, 音乐}
+
+交集：{我, 爱}           → 2个词
+并集：{我, 爱, 编程, 音乐} → 4个词
+
+相似度 = 2 / 4 = 0.5
+</code></pre></div>
+
+<h4 id="_14">复杂例子（考虑词频）</h4>
+<p><strong>文档1：</strong>"我 爱 爱 爱 编程"（"爱"出现3次）
+<strong>文档2：</strong>"我 爱 音乐"</p>
+<p><strong>词频统计：</strong></p>
+<div class="codehilite"><pre><span></span><code>文档1：{我:1, 爱:3, 编程:1}
+文档2：{我:1, 爱:1, 音乐:1}
+</code></pre></div>
+
+<p><strong>计算过程（带权重）：</strong></p>
+<div class="codehilite"><pre><span></span><code>所有词：{我, 爱, 编程, 音乐}
+
+对每个词计算：
+- &quot;我&quot;：doc1有1次，doc2有1次
+  → 交集贡献：min(1, 1) = 1
+  → 并集贡献：max(1, 1) = 1
+
+- &quot;爱&quot;：doc1有3次，doc2有1次
+  → 交集贡献：min(3, 1) = 1
+  → 并集贡献：max(3, 1) = 3
+
+- &quot;编程&quot;：doc1有1次，doc2有0次
+  → 交集贡献：min(1, 0) = 0
+  → 并集贡献：max(1, 0) = 1
+
+- &quot;音乐&quot;：doc1有0次，doc2有1次
+  → 交集贡献：min(0, 1) = 0
+  → 并集贡献：max(0, 1) = 1
+
+总交集 = 1 + 1 + 0 + 0 = 2
+总并集 = 1 + 3 + 1 + 1 = 6
+
+相似度 = 2 / 6 = 0.333
+</code></pre></div>
+
+<hr />
+<h2 id="_15">四、代码详细解释（逐行讲解）</h2>
+<h3 id="_16">整体结构</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 第1部分：处理命令行参数</span>
+<span class="c1"># 第2部分：读取停用词</span>
+<span class="c1"># 第3部分：统计每个文档的词频</span>
+<span class="c1"># 第4部分：计算所有文档对的相似度</span>
+<span class="c1"># 第5部分：排序并输出结果</span>
+</code></pre></div>
+
+<hr />
+<h3 id="1">第1部分：命令行参数（了解即可）</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">re</span><span class="o">,</span><span class="w"> </span><span class="nn">getopt</span>
+
+<span class="n">opts</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">getopt</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s1">&#39;hs:pbI:&#39;</span><span class="p">)</span>
+<span class="n">opts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>什么是命令行参数？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 在终端运行程序时的额外选项</span>
+python<span class="w"> </span>program.py<span class="w"> </span>-s<span class="w"> </span>stoplist.txt<span class="w"> </span>file1.txt<span class="w"> </span>file2.txt
+<span class="w">                  </span>↑<span class="w">               </span>↑
+<span class="w">                  </span>选项<span class="w">            </span>文件名
+</code></pre></div>
+
+<p><strong>参数说明：</strong>
+- <code>-s stoplist.txt</code> - 指定停用词文件
+- <code>-p</code> - 使用词干提取
+- <code>-b</code> - 使用二进制权重（不考虑词频）
+- <code>-I pattern</code> - 用通配符指定文件（如 <code>*.txt</code>）</p>
+<p><strong>代码解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">opts</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">getopt</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s1">&#39;hs:pbI:&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<ul>
+<li><code>sys.argv</code> - 所有命令行参数的列表</li>
+<li><code>sys.argv[0]</code> - 程序名</li>
+<li><code>sys.argv[1:]</code> - 从第2个开始的参数</li>
+<li><code>'hs:pbI:'</code> - 定义哪些选项可用</li>
+<li><code>h</code> - 不需要值的选项</li>
+<li><code>s:</code> - 需要值的选项（冒号表示后面跟参数）</li>
+</ul>
+<hr />
+<h3 id="2">第2部分：读取停用词</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">stops</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="k">if</span> <span class="s1">&#39;-s&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;-s&#39;</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stop_fs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">stop_fs</span><span class="p">:</span>
+            <span class="n">stops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre></div>
+
+<p><strong>什么是停用词？</strong></p>
+<p>停用词 = 太常见、没有实际意义的词</p>
+<p>例如：
+- 英文：the, a, an, is, are, of, to, in
+- 中文：的, 了, 吗, 呢, 吧</p>
+<p><strong>为什么要去掉停用词？</strong></p>
+<div class="codehilite"><pre><span></span><code>文档1：&quot;the cat is on the mat&quot;
+文档2：&quot;the dog is on the mat&quot;
+
+如果不去掉&quot;the, is, on&quot;：
+共同词：{the, is, on, mat} = 4个
+看起来很相似！
+
+去掉停用词后：
+文档1：{cat, mat}
+文档2：{dog, mat}
+共同词：{mat} = 1个
+更能看出差异！
+</code></pre></div>
+
+<p><strong>代码逐行解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">stops</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># 创建空集合（用set因为查找快）</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="s1">&#39;-s&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>  <span class="c1"># 如果用户指定了停用词文件</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;-s&#39;</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stop_fs</span><span class="p">:</span>
+<span class="c1"># opts[&#39;-s&#39;] 是停用词文件的路径</span>
+<span class="c1"># &#39;r&#39; 表示只读模式</span>
+<span class="c1"># stop_fs 是文件对象</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">stop_fs</span><span class="p">:</span>  <span class="c1"># 读取每一行</span>
+    <span class="n">stops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>  <span class="c1"># 去掉换行符，加入集合</span>
+</code></pre></div>
+
+<p><strong><code>line.strip()</code> 的作用：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;the</span><span class="se">\n</span><span class="s2">&quot;</span>  <span class="c1"># 文件中每行结尾有换行符</span>
+<span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>    <span class="c1"># &quot;the&quot; （去掉了\n）</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3">第3部分：统计词频（核心！）</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">count_words</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">stops</span><span class="p">):</span>
+    <span class="n">wordRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;[A-Za-z]+&#39;</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">infile</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stops</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s1">&#39;-p&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                        <span class="n">word</span> <span class="o">=</span> <span class="n">stem_word</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">:</span>
+                        <span class="n">counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">counts</span>
+</code></pre></div>
+
+<h4 id="_17">整体流程图</h4>
+<div class="codehilite"><pre><span></span><code>读取文件
+  ↓
+逐行处理
+  ↓
+提取单词（正则表达式）
+  ↓
+转小写
+  ↓
+检查是否是停用词
+  ↓
+（可选）词干提取
+  ↓
+统计词频
+  ↓
+返回字典
+</code></pre></div>
+
+<h4 id="_18">逐行详解</h4>
+<p><strong>1. 创建正则表达式</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wordRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;[A-Za-z]+&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<ul>
+<li>匹配：1个或多个字母</li>
+<li>作用：提取单词，忽略标点符号</li>
+</ul>
+<p><strong>2. 创建空字典</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+</code></pre></div>
+
+<ul>
+<li>用来存储：<code>{单词: 出现次数}</code></li>
+<li>例如：<code>{'hello': 3, 'world': 2}</code></li>
+</ul>
+<p><strong>3. 打开文件</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+</code></pre></div>
+
+<p><strong>4. 逐行读取</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">infile</span><span class="p">:</span>
+</code></pre></div>
+
+<ul>
+<li>假设文件内容：
+  <code>Hello, World!
+  Python is great.</code></li>
+<li>第1次循环：<code>line = "Hello, World!\n"</code></li>
+<li>第2次循环：<code>line = "Python is great.\n"</code></li>
+</ul>
+<p><strong>5. 提取单词</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+</code></pre></div>
+
+<p><strong>拆解这一行（重要！）：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 步骤1：转小写</span>
+<span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<span class="c1"># &quot;Hello, World!&quot; → &quot;hello, world!&quot;</span>
+
+<span class="c1"># 步骤2：用正则表达式提取单词</span>
+<span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;hello, world!&quot;</span><span class="p">)</span>
+<span class="c1"># 返回列表：[&#39;hello&#39;, &#39;world&#39;]</span>
+
+<span class="c1"># 步骤3：遍历每个单词</span>
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">]:</span>
+</code></pre></div>
+
+<p><strong>6. 检查停用词</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stops</span><span class="p">:</span>
+</code></pre></div>
+
+<ul>
+<li>如果 <code>word</code> 不在停用词列表，继续处理</li>
+<li>否则跳过（不统计这个词）</li>
+</ul>
+<p><strong>7. 词干提取（可选）</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="s1">&#39;-p&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+    <span class="n">word</span> <span class="o">=</span> <span class="n">stem_word</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>什么是词干提取？</strong>
+- 把单词变成"词根"形式
+- 例如：
+  - running → run
+  - played → play
+  - better → better（不规则，可能不变）</p>
+<p><strong>为什么要词干提取？</strong></p>
+<div class="codehilite"><pre><span></span><code>文档1：I am running
+文档2：I like to run
+
+不提取词干：
+文档1：{running}
+文档2：{run}
+共同词：0个（不相似）
+
+提取词干后：
+文档1：{run}
+文档2：{run}
+共同词：1个（相似！）
+</code></pre></div>
+
+<p><strong>8. 统计词频</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">:</span>
+    <span class="n">counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 已存在，次数+1</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>   <span class="c1"># 第一次出现，设为1</span>
+</code></pre></div>
+
+<p><strong>执行过程示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 假设处理句子：&quot;hello world hello&quot;</span>
+
+<span class="c1"># 第1个词：&quot;hello&quot;</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span>
+<span class="n">word</span> <span class="ow">in</span> <span class="n">counts</span><span class="err">?</span>  <span class="err">→</span> <span class="kc">False</span>
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;hello&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># counts = {&quot;hello&quot;: 1}</span>
+
+<span class="c1"># 第2个词：&quot;world&quot;</span>
+<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;world&quot;</span>
+<span class="n">word</span> <span class="ow">in</span> <span class="n">counts</span><span class="err">?</span>  <span class="err">→</span> <span class="kc">False</span>
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;world&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># counts = {&quot;hello&quot;: 1, &quot;world&quot;: 1}</span>
+
+<span class="c1"># 第3个词：&quot;hello&quot;</span>
+<span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span>
+<span class="n">word</span> <span class="ow">in</span> <span class="n">counts</span><span class="err">?</span>  <span class="err">→</span> <span class="kc">True</span><span class="err">!</span>
+<span class="n">counts</span><span class="p">[</span><span class="s2">&quot;hello&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 1变成2</span>
+<span class="c1"># counts = {&quot;hello&quot;: 2, &quot;world&quot;: 1}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4jaccard">第4部分：计算Jaccard相似度</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">jaccard</span><span class="p">(</span><span class="n">doc1</span><span class="p">,</span> <span class="n">doc2</span><span class="p">):</span>
+    <span class="n">wds1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">doc1</span><span class="p">)</span>
+    <span class="n">wds2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">doc2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;-b&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+        <span class="n">over</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wds1</span> <span class="o">&amp;</span> <span class="n">wds2</span><span class="p">)</span>
+        <span class="n">under</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wds1</span> <span class="o">|</span> <span class="n">wds2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">over</span> <span class="o">=</span> <span class="n">under</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">wd</span> <span class="ow">in</span> <span class="p">(</span><span class="n">wds1</span> <span class="o">|</span> <span class="n">wds2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc1</span> <span class="ow">and</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc2</span><span class="p">:</span>
+                <span class="n">over</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="n">doc1</span><span class="p">[</span><span class="n">wd</span><span class="p">],</span> <span class="n">doc2</span><span class="p">[</span><span class="n">wd</span><span class="p">])</span>
+            <span class="n">wmax</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc1</span><span class="p">:</span>
+                <span class="n">wmax</span> <span class="o">=</span> <span class="n">doc1</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc2</span><span class="p">:</span>
+                <span class="n">wmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">doc2</span><span class="p">[</span><span class="n">wd</span><span class="p">],</span> <span class="n">wmax</span><span class="p">)</span>
+            <span class="n">under</span> <span class="o">+=</span> <span class="n">wmax</span>
+    <span class="k">if</span> <span class="n">under</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">over</span> <span class="o">/</span> <span class="n">under</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+</code></pre></div>
+
+<h4 id="_19">输入和输出</h4>
+<p><strong>输入：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">doc1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hello&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="n">doc2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hello&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;java&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+</code></pre></div>
+
+<p><strong>输出：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">0.5</span>  <span class="c1"># 相似度50%</span>
+</code></pre></div>
+
+<h4 id="-b">二进制模式（<code>-b</code> 选项）</h4>
+<p><strong>忽略词频，只看有没有：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wds1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">doc1</span><span class="p">)</span>  <span class="c1"># {&#39;hello&#39;, &#39;world&#39;, &#39;python&#39;}</span>
+<span class="n">wds2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">doc2</span><span class="p">)</span>  <span class="c1"># {&#39;hello&#39;, &#39;world&#39;, &#39;java&#39;}</span>
+</code></pre></div>
+
+<p><strong>集合运算（Python语法）：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wds1</span> <span class="o">&amp;</span> <span class="n">wds2</span>  <span class="c1"># 交集（&amp;符号）</span>
+<span class="c1"># {&#39;hello&#39;, &#39;world&#39;}</span>
+
+<span class="n">wds1</span> <span class="o">|</span> <span class="n">wds2</span>  <span class="c1"># 并集（|符号）</span>
+<span class="c1"># {&#39;hello&#39;, &#39;world&#39;, &#39;python&#39;, &#39;java&#39;}</span>
+</code></pre></div>
+
+<p><strong>计算相似度：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">over</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wds1</span> <span class="o">&amp;</span> <span class="n">wds2</span><span class="p">)</span>  <span class="c1"># 交集大小 = 2</span>
+<span class="n">under</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wds1</span> <span class="o">|</span> <span class="n">wds2</span><span class="p">)</span>  <span class="c1"># 并集大小 = 4</span>
+
+<span class="k">return</span> <span class="n">over</span> <span class="o">/</span> <span class="n">under</span>  <span class="c1"># 2/4 = 0.5</span>
+</code></pre></div>
+
+<h4 id="_20">带权重模式（默认）</h4>
+<p><strong>考虑词频：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wds1</span> <span class="o">|</span> <span class="n">wds2</span>  <span class="c1"># 所有不同的词</span>
+<span class="c1"># {&#39;hello&#39;, &#39;world&#39;, &#39;python&#39;, &#39;java&#39;}</span>
+
+<span class="n">over</span> <span class="o">=</span> <span class="n">under</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div>
+
+<p><strong>遍历每个词：</strong></p>
+<p><strong>词1："hello"</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span>
+
+<span class="c1"># 两个文档都有这个词吗？</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc1</span> <span class="ow">and</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc2</span><span class="p">:</span>  <span class="c1"># True</span>
+    <span class="n">over</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="n">doc1</span><span class="p">[</span><span class="n">wd</span><span class="p">],</span> <span class="n">doc2</span><span class="p">[</span><span class="n">wd</span><span class="p">])</span>
+    <span class="c1"># over += min(2, 1) = 1</span>
+
+<span class="c1"># 计算最大值</span>
+<span class="n">wmax</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc1</span><span class="p">:</span>
+    <span class="n">wmax</span> <span class="o">=</span> <span class="n">doc1</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span>  <span class="c1"># wmax = 2</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc2</span><span class="p">:</span>
+    <span class="n">wmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">doc2</span><span class="p">[</span><span class="n">wd</span><span class="p">],</span> <span class="n">wmax</span><span class="p">)</span>  <span class="c1"># max(1, 2) = 2</span>
+<span class="n">under</span> <span class="o">+=</span> <span class="n">wmax</span>  <span class="c1"># under += 2</span>
+
+<span class="c1"># 现在：over=1, under=2</span>
+</code></pre></div>
+
+<p><strong>词2："world"</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s2">&quot;world&quot;</span>
+
+<span class="c1"># 都有</span>
+<span class="n">over</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># over = 1 + 1 = 2</span>
+
+<span class="n">wmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">under</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># under = 2 + 1 = 3</span>
+</code></pre></div>
+
+<p><strong>词3："python"</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s2">&quot;python&quot;</span>
+
+<span class="c1"># doc1有，doc2没有</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc1</span> <span class="ow">and</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc2</span><span class="p">:</span>  <span class="c1"># False</span>
+    <span class="c1"># 不执行</span>
+
+<span class="n">wmax</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc1</span><span class="p">:</span>
+    <span class="n">wmax</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">doc2</span><span class="p">:</span>  <span class="c1"># False</span>
+    <span class="c1"># 不执行</span>
+<span class="n">under</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># under = 3 + 1 = 4</span>
+</code></pre></div>
+
+<p><strong>词4："java"</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s2">&quot;java&quot;</span>
+
+<span class="c1"># doc1没有，doc2有</span>
+<span class="c1"># 交集贡献 = 0</span>
+
+<span class="n">wmax</span> <span class="o">=</span> <span class="n">doc2</span><span class="p">[</span><span class="s2">&quot;java&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">under</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># under = 4 + 1 = 5</span>
+</code></pre></div>
+
+<p><strong>最终结果：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">over</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">under</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="k">return</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">5</span> <span class="o">=</span> <span class="mf">0.4</span>
+</code></pre></div>
+
+<hr />
+<h3 id="5">第5部分：计算所有文档对</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">docs</span><span class="p">)):</span>
+        <span class="n">pair_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> &lt;&gt; </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">filenames</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">pair_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">jaccard</span><span class="p">(</span><span class="n">docs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">docs</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+</code></pre></div>
+
+<h4 id="_21">为什么两层循环？</h4>
+<p><strong>假设有3个文档：A, B, C</strong></p>
+<p>需要比较的对：
+- A vs B
+- A vs C
+- B vs C</p>
+<p><strong>不需要比较：</strong>
+- A vs A（自己跟自己）
+- B vs A（跟 A vs B 重复）</p>
+<h4 id="_22">循环解释</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">docs</span> <span class="o">=</span> <span class="p">[</span><span class="n">doc_A</span><span class="p">,</span> <span class="n">doc_B</span><span class="p">,</span> <span class="n">doc_C</span><span class="p">]</span>  <span class="c1"># 3个文档</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="c1"># 外层循环：i = 0, 1</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">docs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># range(2) → 0, 1</span>
+    <span class="c1"># 内层循环：j从i+1开始</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">docs</span><span class="p">)):</span>
+</code></pre></div>
+
+<p><strong>执行过程：</strong></p>
+<div class="codehilite"><pre><span></span><code>i=0, j=1：比较 doc_A vs doc_B
+i=0, j=2：比较 doc_A vs doc_C
+i=1, j=2：比较 doc_B vs doc_C
+</code></pre></div>
+
+<p><strong>图解：</strong></p>
+<div class="codehilite"><pre><span></span><code>     A   B   C
+A    -   ✓   ✓
+B        -   ✓
+C            -
+
+只计算上三角（不包括对角线）
+</code></pre></div>
+
+<hr />
+<h3 id="6">第6部分：排序输出</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">top_N</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">pairs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span><span class="n">results</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">top_N</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">pairs</span><span class="p">[:</span><span class="n">top_N</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">%d</span><span class="s1">] </span><span class="si">%s</span><span class="s1"> = </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">pair</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="n">pair</span><span class="p">]))</span>
+</code></pre></div>
+
+<h4 id="sorted"><code>sorted()</code> 函数详解</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;A &lt;&gt; B&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+    <span class="s1">&#39;A &lt;&gt; C&#39;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">,</span>
+    <span class="s1">&#39;B &lt;&gt; C&#39;</span><span class="p">:</span> <span class="mf">0.5</span>
+<span class="p">}</span>
+
+<span class="n">pairs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span><span class="n">results</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>参数解释：</strong>
+- <code>results</code> - 要排序的字典
+- <code>key=lambda v:results[v]</code> - 排序依据（按值排序）
+- <code>reverse=True</code> - 降序（从大到小）</p>
+<p><strong><code>lambda</code> 是什么？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># lambda是匿名函数（简写函数）</span>
+
+<span class="c1"># 普通写法：</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_value</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+<span class="n">pairs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">get_value</span><span class="p">)</span>
+
+<span class="c1"># lambda简写：</span>
+<span class="n">pairs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span><span class="n">results</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+</code></pre></div>
+
+<p><strong>排序过程：</strong></p>
+<div class="codehilite"><pre><span></span><code>原始：
+A &lt;&gt; B: 0.3
+A &lt;&gt; C: 0.7
+B &lt;&gt; C: 0.5
+
+排序后（降序）：
+A &lt;&gt; C: 0.7  ← 最相似
+B &lt;&gt; C: 0.5
+A &lt;&gt; B: 0.3
+</code></pre></div>
+
+<h4 id="n">取前N个</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">pairs</span> <span class="o">=</span> <span class="n">pairs</span><span class="p">[:</span><span class="n">top_N</span><span class="p">]</span>  <span class="c1"># 列表切片，取前20个</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_23">五、完整执行示例（手工模拟）</h2>
+<h3 id="_24">输入数据</h3>
+<p><strong>文件1 (news01.txt)：</strong></p>
+<div class="codehilite"><pre><span></span><code>Python is great. Python is easy.
+</code></pre></div>
+
+<p><strong>文件2 (news02.txt)：</strong></p>
+<div class="codehilite"><pre><span></span><code>Java is great. Java is powerful.
+</code></pre></div>
+
+<p><strong>停用词 (stoplist.txt)：</strong></p>
+<div class="codehilite"><pre><span></span><code>is
+</code></pre></div>
+
+<h3 id="_25">执行过程</h3>
+<h4 id="1_1">步骤1：统计词频</h4>
+<p><strong>处理文件1：</strong></p>
+<div class="codehilite"><pre><span></span><code>原文：Python is great. Python is easy.
+
+1. 正则提取单词并转小写：
+   [&#39;python&#39;, &#39;is&#39;, &#39;great&#39;, &#39;python&#39;, &#39;is&#39;, &#39;easy&#39;]
+
+2. 去掉停用词&quot;is&quot;：
+   [&#39;python&#39;, &#39;great&#39;, &#39;python&#39;, &#39;easy&#39;]
+
+3. 统计词频：
+   doc1 = {
+       &#39;python&#39;: 2,
+       &#39;great&#39;: 1,
+       &#39;easy&#39;: 1
+   }
+</code></pre></div>
+
+<p><strong>处理文件2：</strong></p>
+<div class="codehilite"><pre><span></span><code>原文：Java is great. Java is powerful.
+
+统计结果：
+doc2 = {
+    &#39;java&#39;: 2,
+    &#39;great&#39;: 1,
+    &#39;powerful&#39;: 1
+}
+</code></pre></div>
+
+<h4 id="2_1">步骤2：计算相似度</h4>
+<p><strong>二进制模式 (<code>-b</code>)：</strong></p>
+<div class="codehilite"><pre><span></span><code>wds1 = {python, great, easy}
+wds2 = {java, great, powerful}
+
+交集 = {great}              → 1个
+并集 = {python, great, easy, java, powerful} → 5个
+
+相似度 = 1 / 5 = 0.2
+</code></pre></div>
+
+<p><strong>带权重模式：</strong></p>
+<div class="codehilite"><pre><span></span><code>所有词：{python, great, easy, java, powerful}
+
+&quot;python&quot;: min(2,0)=0, max(2,0)=2  → over+=0, under+=2
+&quot;great&quot;:  min(1,1)=1, max(1,1)=1  → over+=1, under+=1
+&quot;easy&quot;:   min(1,0)=0, max(1,0)=1  → over+=0, under+=1
+&quot;java&quot;:   min(0,2)=0, max(0,2)=2  → over+=0, under+=2
+&quot;powerful&quot;: min(0,1)=0, max(0,1)=1 → over+=0, under+=1
+
+over = 1
+under = 7
+
+相似度 = 1 / 7 ≈ 0.143
+</code></pre></div>
+
+<hr />
+<h2 id="_26">六、两种实现的对比</h2>
+<h3 id="vs">使用正则表达式 vs 不使用</h3>
+<h4 id="1_2">方法1：用正则表达式</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">wordRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;[A-Za-z]+&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+    <span class="c1"># 处理word</span>
+</code></pre></div>
+
+<p><strong>优点：</strong>
+- 代码简洁（1行）
+- 功能强大（可以匹配复杂模式）</p>
+<p><strong>提取结果：</strong></p>
+<div class="codehilite"><pre><span></span><code>&quot;Hello, World! 123&quot; → [&#39;hello&#39;, &#39;world&#39;]
+</code></pre></div>
+
+<h4 id="2_2">方法2：不用正则表达式</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove_punctuation</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">char</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">)</span>
+
+<span class="n">words</span> <span class="o">=</span> <span class="n">remove_punctuation</span><span class="p">(</span><span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>步骤：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">去标点</span><span class="err">：</span><span class="s">&quot;Hello, World!&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">转小写</span><span class="err">：</span><span class="s">&quot;hello world&quot;</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">分割</span><span class="err">：[&#39;</span><span class="n">hello</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;</span><span class="n">world</span><span class="err">&#39;]</span>
+</code></pre></div>
+
+<p><strong>对比：</strong>
+| 特性 | 正则表达式 | 不用正则 |
+|------|-----------|---------|
+| 代码量 | 少 | 多 |
+| 速度 | 快 | 慢 |
+| 灵活性 | 高 | 低 |
+| 学习难度 | 中 | 简单 |</p>
+<hr />
+<h2 id="_27">七、纸笔考试重点</h2>
+<h3 id="_28">必须掌握</h3>
+<ol>
+<li>✅ <strong>正则表达式基本符号</strong></li>
+<li><code>[A-Z]</code>, <code>[a-z]</code>, <code>[0-9]</code></li>
+<li><code>+</code> (至少1次), <code>*</code> (0次或多次)</li>
+<li>
+<p><code>[A-Za-z]+</code> 的含义</p>
+</li>
+<li>
+<p>✅ <strong>Jaccard相似度计算</strong></p>
+</li>
+<li>公式：交集 / 并集</li>
+<li>二进制模式：只看有没有</li>
+<li>带权重模式：考虑词频</li>
+<li>
+<p>手工计算示例</p>
+</li>
+<li>
+<p>✅ <strong>词频统计</strong></p>
+</li>
+<li>用字典存储：<code>{单词: 次数}</code></li>
+<li><code>if word in counts</code> 的判断</li>
+<li>
+<p><code>counts[word] += 1</code> 的更新</p>
+</li>
+<li>
+<p>✅ <strong>停用词的作用</strong></p>
+</li>
+<li>为什么要去掉</li>
+<li>怎么去掉</li>
+</ol>
+<h3 id="_29">可能的考题</h3>
+<h4 id="1_3">题型1：正则表达式匹配</h4>
+<p><strong>题目：</strong>用正则表达式 <code>[a-z]+</code> 匹配 "Hello123world"，结果是什么？</p>
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>匹配结果：[&#39;ello&#39;, &#39;world&#39;]
+
+解释：
+- [a-z]只匹配小写字母
+- H是大写，不匹配
+- ello是连续小写字母，匹配✅
+- 123不是字母，跳过
+- world是连续小写字母，匹配✅
+</code></pre></div>
+
+
+</details>
+
+<h4 id="2jaccard">题型2：Jaccard计算</h4>
+<p><strong>题目：</strong></p>
+<div class="codehilite"><pre><span></span><code>文档A：{apple: 2, banana: 1}
+文档B：{apple: 1, orange: 1}
+
+计算Jaccard相似度（带权重模式）
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>所有词：{apple, banana, orange}
+
+apple:  min(2,1)=1, max(2,1)=2  → over=1, under=2
+banana: min(1,0)=0, max(1,0)=1  → over=1, under=3
+orange: min(0,1)=0, max(0,1)=1  → over=1, under=4
+
+相似度 = 1/4 = 0.25
+</code></pre></div>
+
+
+</details>
+
+<h4 id="3_1">题型3：词频统计</h4>
+<p><strong>题目：</strong>给定代码片段，说明执行后 <code>counts</code> 的值</p>
+<div class="codehilite"><pre><span></span><code><span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">,</span> <span class="s1">&#39;hello&#39;</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">:</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># 执行过程：</span>
+<span class="c1"># word=&#39;hello&#39;: counts = {&#39;hello&#39;: 1}</span>
+<span class="c1"># word=&#39;world&#39;: counts = {&#39;hello&#39;: 1, &#39;world&#39;: 1}</span>
+<span class="c1"># word=&#39;hello&#39;: counts = {&#39;hello&#39;: 2, &#39;world&#39;: 1}</span>
+
+<span class="n">最终</span><span class="err">：</span><span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hello&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h2 id="_30">八、记忆口诀</h2>
+<h3 id="_31">正则表达式</h3>
+<div class="codehilite"><pre><span></span><code>方括号范围定，
+加号至少一，
+星号可为零，
+找词用加号。
+</code></pre></div>
+
+<h3 id="jaccard_2">Jaccard相似度</h3>
+<div class="codehilite"><pre><span></span><code>交集除并集，
+相同比总数，
+二进制看有无，
+权重看多少。
+</code></pre></div>
+
+<h3 id="_32">词频统计</h3>
+<div class="codehilite"><pre><span></span><code>字典存词频，
+存在就加一，
+不存就设一，
+循环把词分。
+</code></pre></div>
+
+<hr />
+<h2 id="_33">九、常见错误</h2>
+<h3 id="1_4">❌ 错误1：混淆 <code>*</code> 和 <code>+</code></h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误理解</span>
+<span class="s1">&#39;[a-z]*&#39;</span> <span class="n">匹配至少1个小写字母</span>  <span class="err">❌</span>
+
+<span class="c1"># 正确理解</span>
+<span class="s1">&#39;[a-z]*&#39;</span> <span class="n">匹配0个或多个小写字母</span>  <span class="err">✅</span>
+<span class="s1">&#39;[a-z]+&#39;</span> <span class="n">匹配至少1个小写字母</span>  <span class="err">✅</span>
+</code></pre></div>
+
+<h3 id="2_3">❌ 错误2：忘记转小写</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="c1"># &quot;Hello&quot; 和 &quot;hello&quot; 被认为是不同的词</span>
+
+<span class="c1"># 正确</span>
+<span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+<span class="c1"># 都变成 &quot;hello&quot;</span>
+</code></pre></div>
+
+<h3 id="3jaccard">❌ 错误3：Jaccard计算错误</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误：用加法</span>
+<span class="n">over</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wds1</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">wds2</span><span class="p">)</span>  <span class="err">❌</span>
+
+<span class="c1"># 正确：用交集</span>
+<span class="n">over</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wds1</span> <span class="o">&amp;</span> <span class="n">wds2</span><span class="p">)</span>  <span class="err">✅</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_34">十、实战练习</h2>
+<h3 id="1_5">练习1：正则匹配</h3>
+<p>给定文本："Python3.9 is Great!"</p>
+<p>用 <code>[A-Za-z]+</code> 匹配，结果是？</p>
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="p">[</span><span class="s1">&#39;Python&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;Great&#39;</span><span class="p">]</span>
+
+<span class="n">注意</span><span class="err">：</span>
+<span class="o">-</span> <span class="n">数字3和9不匹配</span>
+<span class="o">-</span> <span class="n">标点符号被跳过</span>
+</code></pre></div>
+
+
+</details>
+
+<h3 id="2_4">练习2：相似度计算</h3>
+<div class="codehilite"><pre><span></span><code>文档1：I love Python
+文档2：I like Python
+
+停用词：I
+
+计算相似度（二进制模式）
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>去掉停用词：
+doc1: {love, python}
+doc2: {like, python}
+
+交集：{python} = 1个
+并集：{love, like, python} = 3个
+
+相似度 = 1/3 ≈ 0.333
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<p><strong>祝你考试顺利！</strong> 🎉</p>
+<p>记住：
+- 正则表达式是工具，用来提取文本
+- Jaccard是算法，用来计算相似度
+- 理解原理比记代码更重要！</p>
+</body>
+</html>

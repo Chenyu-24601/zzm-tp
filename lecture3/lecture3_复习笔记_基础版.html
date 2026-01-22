@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>Lecture 3 复习笔记</title>
+<style>
+* {margin:0; padding:0; box-sizing:border-box;}
+body {font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; line-height:1.8; color:#2c3e50; padding:40px; max-width:900px; margin:0 auto;}
+h1 {color:#1a1a1a; font-size:32px; margin:40px 0 20px 0; padding-bottom:15px; border-bottom:4px solid #3498db;}
+h2 {color:#2c3e50; font-size:24px; margin:35px 0 15px 0; padding-left:15px; border-left:5px solid #3498db;}
+h3 {color:#34495e; font-size:20px; margin:25px 0 12px 0;}
+h4 {color:#555; font-size:16px; margin:20px 0 10px 0;}
+p {margin:12px 0; font-size:15px;}
+strong {color:#e74c3c; font-weight:700;}
+em {color:#16a085;}
+code {background:#f5f5f5; color:#c7254e; padding:3px 6px; border-radius:4px; font-family:Monaco,Consolas,monospace; font-size:14px;}
+pre {background:#f8f9fa; border:1px solid #e1e4e8; border-left:4px solid #3498db; border-radius:6px; padding:20px; margin:20px 0; overflow-x:auto;}
+pre code {background:transparent; color:#24292e; padding:0; font-size:13px; display:block;}
+ul,ol {margin:15px 0; padding-left:30px;}
+li {margin:8px 0;}
+table {width:100%; border-collapse:collapse; margin:20px 0; font-size:14px;}
+table th {background:#3498db; color:white; padding:12px; text-align:left;}
+table td {border:1px solid #ddd; padding:12px;}
+table tr:nth-child(even) {background:#f8f9fa;}
+details {background:#e8f5e9; border:1px solid #4caf50; border-radius:6px; padding:15px; margin:15px 0;}
+summary {cursor:pointer; font-weight:600; color:#2e7d32; padding:5px;}
+@media print {
+  body {padding:20px; font-size:12pt;}
+  h1 {page-break-before:always; font-size:24pt;}
+  h1:first-of-type {page-break-before:avoid;}
+  h2 {page-break-after:avoid; font-size:18pt;}
+  pre,table {page-break-inside:avoid;}
+}
+</style>
+</head>
+<body><h1 id="lecture-3-pos-tagging">Lecture 3 超基础复习笔记 - 词性标注（POS Tagging）</h1>
+<h2 id="_1">零、先理解问题（什么是词性标注？）</h2>
+<h3 id="part-of-speech">什么是词性（Part of Speech）？</h3>
+<p>词性 = 单词在句子中的语法角色</p>
+<p><strong>中文例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>我（代词） 爱（动词） 吃（动词） 苹果（名词）
+</code></pre></div>
+
+<p><strong>英文例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>I     love   eating  apples
+代词   动词   动词    名词
+PRP   VBP    VBG     NNS
+</code></pre></div>
+
+<h3 id="_2">为什么需要词性标注？</h3>
+<p><strong>应用场景：</strong></p>
+<ol>
+<li><strong>机器翻译</strong>
+   ```
+   "book" 可以是：</li>
+<li>名词：I read a book（书）</li>
+<li>动词：I will book a ticket（预订）</li>
+</ol>
+<p>需要知道词性才能正确翻译！
+   ```</p>
+<ol>
+<li><strong>语音合成</strong>
+   ```
+   "read" 的发音取决于词性：</li>
+<li>现在时动词：read [riːd]（读）</li>
+<li>
+<p>过去时：read [red]（已读）
+   ```</p>
+</li>
+<li>
+<p><strong>信息提取</strong>
+   <code>找出句子中的所有人名：
+   通常人名是专有名词（NNP标签）</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="brill-format">一、数据格式（Brill Format）</h2>
+<h3 id="_3">原始格式</h3>
+<p><strong>训练数据示例：</strong></p>
+<div class="codehilite"><pre><span></span><code>The/DT dog/NN is/VBZ running/VBG ./.
+I/PRP love/VBP Python/NNP ./.
+</code></pre></div>
+
+<p><strong>格式说明：</strong></p>
+<div class="codehilite"><pre><span></span><code>单词/词性标签 单词/词性标签 ...
+
+The/DT
+ ↑   ↑
+单词 标签
+</code></pre></div>
+
+<h3 id="_4">常见词性标签（必须记住！）</h3>
+<table>
+<thead>
+<tr>
+<th>标签</th>
+<th>全称</th>
+<th>中文</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NN</strong></td>
+<td>Noun (singular)</td>
+<td>名词（单数）</td>
+<td>dog, cat, book</td>
+</tr>
+<tr>
+<td><strong>NNS</strong></td>
+<td>Noun (plural)</td>
+<td>名词（复数）</td>
+<td>dogs, cats, books</td>
+</tr>
+<tr>
+<td><strong>NNP</strong></td>
+<td>Proper noun (singular)</td>
+<td>专有名词</td>
+<td>John, London, Python</td>
+</tr>
+<tr>
+<td><strong>VB</strong></td>
+<td>Verb (base form)</td>
+<td>动词（原形）</td>
+<td>run, eat, go</td>
+</tr>
+<tr>
+<td><strong>VBG</strong></td>
+<td>Verb (gerund/present participle)</td>
+<td>动词（进行时）</td>
+<td>running, eating, going</td>
+</tr>
+<tr>
+<td><strong>VBD</strong></td>
+<td>Verb (past tense)</td>
+<td>动词（过去时）</td>
+<td>ran, ate, went</td>
+</tr>
+<tr>
+<td><strong>VBZ</strong></td>
+<td>Verb (3rd person singular)</td>
+<td>动词（第三人称）</td>
+<td>runs, eats, goes</td>
+</tr>
+<tr>
+<td><strong>JJ</strong></td>
+<td>Adjective</td>
+<td>形容词</td>
+<td>good, big, happy</td>
+</tr>
+<tr>
+<td><strong>RB</strong></td>
+<td>Adverb</td>
+<td>副词</td>
+<td>quickly, very, well</td>
+</tr>
+<tr>
+<td><strong>PRP</strong></td>
+<td>Personal pronoun</td>
+<td>人称代词</td>
+<td>I, you, he, she</td>
+</tr>
+<tr>
+<td><strong>DT</strong></td>
+<td>Determiner</td>
+<td>限定词</td>
+<td>the, a, an, this</td>
+</tr>
+<tr>
+<td><strong>IN</strong></td>
+<td>Preposition</td>
+<td>介词</td>
+<td>in, on, at, with</td>
+</tr>
+<tr>
+<td><strong>CD</strong></td>
+<td>Cardinal number</td>
+<td>基数词</td>
+<td>1, 2, three, 100</td>
+</tr>
+<tr>
+<td><strong>.</strong></td>
+<td>Punctuation</td>
+<td>标点符号</td>
+<td>. ! ? ,</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">二、两层字典（核心数据结构！）</h2>
+<h3 id="_6">为什么需要两层字典？</h3>
+<p><strong>问题：</strong>一个单词可能有多个词性！</p>
+<div class="codehilite"><pre><span></span><code>&quot;book&quot; 在训练数据中：
+- 作为名词（NN）出现了 50 次
+- 作为动词（VB）出现了 10 次
+</code></pre></div>
+
+<p><strong>需要存储：</strong></p>
+<div class="codehilite"><pre><span></span><code>book → NN: 50次
+       VB: 10次
+</code></pre></div>
+
+<h3 id="_7">两层字典结构</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">单词1</span><span class="p">:</span> <span class="p">{</span><span class="n">标签A</span><span class="p">:</span> <span class="n">次数</span><span class="p">,</span> <span class="n">标签B</span><span class="p">:</span> <span class="n">次数</span><span class="p">},</span>
+    <span class="n">单词2</span><span class="p">:</span> <span class="p">{</span><span class="n">标签C</span><span class="p">:</span> <span class="n">次数</span><span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>具体例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>
+    <span class="s1">&#39;running&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBG&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="s1">&#39;the&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;DT&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">},</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>图解：</strong></p>
+<div class="codehilite"><pre><span></span><code>word_tag_counts
+    │
+    ├─ &quot;book&quot; ─── {&#39;NN&#39;: 50, &#39;VB&#39;: 10}
+    │                 ↑          ↑
+    │              第2层字典   第2层字典
+    │
+    ├─ &quot;running&quot; ─ {&#39;VBG&#39;: 30, &#39;NN&#39;: 5}
+    │
+    └─ &quot;the&quot; ───── {&#39;DT&#39;: 1000}
+</code></pre></div>
+
+<hr />
+<h2 id="_8">三、构建两层字典（逐步详解）</h2>
+<h3 id="_9">整体流程</h3>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">读取文件的每一行</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">分割每行为</span><span class="w"> </span><span class="s">&quot;单词/标签&quot;</span><span class="w"> </span><span class="n">对</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">分离单词和标签</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">更新两层字典的计数</span>
+</code></pre></div>
+
+<h3 id="_10">代码详细讲解</h3>
+<h4 id="1">第1步：解析一行数据</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+    <span class="n">wdtags</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">wdtagpairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">wdtag</span> <span class="ow">in</span> <span class="n">wdtags</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">wdtag</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="n">wdtagpairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">wdtagpairs</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<p>输入：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;The/DT dog/NN runs/VBZ ./.&quot;</span>
+</code></pre></div>
+
+<p><strong>步骤1：按空格分割</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wdtags</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="c1"># wdtags = [&#39;The/DT&#39;, &#39;dog/NN&#39;, &#39;runs/VBZ&#39;, &#39;./.&#39;]</span>
+</code></pre></div>
+
+<p><strong>步骤2：遍历每个词标签对</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 第1次循环</span>
+<span class="n">wdtag</span> <span class="o">=</span> <span class="s1">&#39;The/DT&#39;</span>
+<span class="n">parts</span> <span class="o">=</span> <span class="n">wdtag</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>  <span class="c1"># [&#39;The&#39;, &#39;DT&#39;]</span>
+<span class="n">wdtagpairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;The&#39;</span><span class="p">,</span> <span class="s1">&#39;DT&#39;</span><span class="p">))</span>
+
+<span class="c1"># 第2次循环</span>
+<span class="n">wdtag</span> <span class="o">=</span> <span class="s1">&#39;dog/NN&#39;</span>
+<span class="n">parts</span> <span class="o">=</span> <span class="n">wdtag</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>  <span class="c1"># [&#39;dog&#39;, &#39;NN&#39;]</span>
+<span class="n">wdtagpairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">))</span>
+
+<span class="c1"># ... 继续</span>
+
+<span class="c1"># 最终结果</span>
+<span class="n">wdtagpairs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;The&#39;</span><span class="p">,</span> <span class="s1">&#39;DT&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;runs&#39;</span><span class="p">,</span> <span class="s1">&#39;VBZ&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)]</span>
+</code></pre></div>
+
+<p><strong>返回值类型：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 列表，里面是元组（tuple）</span>
+<span class="p">[(</span><span class="s1">&#39;单词1&#39;</span><span class="p">,</span> <span class="s1">&#39;标签1&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;单词2&#39;</span><span class="p">,</span> <span class="s1">&#39;标签2&#39;</span><span class="p">),</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2">第2步：更新两层字典</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data_in</span><span class="p">:</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span> <span class="ow">in</span> <span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">:</span>
+            <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]:</span>
+            <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p><strong>超详细执行过程：</strong></p>
+<p>假设处理两行数据：</p>
+<div class="codehilite"><pre><span></span><code>I/PRP love/VBP Python/NNP ./.
+I/PRP love/VBP coding/VBG ./.
+</code></pre></div>
+
+<p><strong>初始状态：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{}</span>
+</code></pre></div>
+
+<hr />
+<p><strong>处理第1个词：('I', 'PRP')</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;I&#39;</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="s1">&#39;PRP&#39;</span>
+
+<span class="c1"># 检查：&#39;I&#39; 在字典里吗？</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">:</span>  <span class="c1"># True（还是空字典）</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># 创建第2层字典</span>
+    <span class="c1"># 现在：word_tag_counts = {&#39;I&#39;: {}}</span>
+
+<span class="c1"># 检查：&#39;PRP&#39; 在 word_tag_counts[&#39;I&#39;] 里吗？</span>
+<span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]:</span>  <span class="c1"># False（第2层字典是空的）</span>
+    <span class="c1"># 不执行</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># 现在：word_tag_counts = {&#39;I&#39;: {&#39;PRP&#39;: 1}}</span>
+</code></pre></div>
+
+<p><strong>处理第2个词：('love', 'VBP')</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;love&#39;</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="s1">&#39;VBP&#39;</span>
+
+<span class="c1"># &#39;love&#39; 在字典里吗？</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">:</span>  <span class="c1"># True</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># 现在：word_tag_counts = {&#39;I&#39;: {&#39;PRP&#39;: 1}, &#39;love&#39;: {}}</span>
+
+<span class="c1"># &#39;VBP&#39; 在 word_tag_counts[&#39;love&#39;] 里吗？</span>
+<span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]:</span>  <span class="c1"># False</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># 现在：word_tag_counts = {&#39;I&#39;: {&#39;PRP&#39;: 1}, &#39;love&#39;: {&#39;VBP&#39;: 1}}</span>
+</code></pre></div>
+
+<p><strong>处理第3个词：('Python', 'NNP')</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;PRP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>处理第4个词：('.', '.')</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;PRP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<p><strong>继续处理第2行数据...</strong></p>
+<p><strong>再次遇到 ('I', 'PRP')：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;I&#39;</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="s1">&#39;PRP&#39;</span>
+
+<span class="c1"># &#39;I&#39; 在字典里吗？</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">:</span>  <span class="c1"># False（已经存在了！）</span>
+    <span class="c1"># 不执行</span>
+
+<span class="c1"># &#39;PRP&#39; 在 word_tag_counts[&#39;I&#39;] 里吗？</span>
+<span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]:</span>  <span class="c1"># True（已经有了！）</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 1变成2</span>
+    <span class="c1"># 现在：word_tag_counts[&#39;I&#39;][&#39;PRP&#39;] = 2</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># 不执行</span>
+</code></pre></div>
+
+<p><strong>再次遇到 ('love', 'VBP')：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 同样的逻辑</span>
+<span class="n">word_tag_counts</span><span class="p">[</span><span class="s1">&#39;love&#39;</span><span class="p">][</span><span class="s1">&#39;VBP&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 1变成2</span>
+</code></pre></div>
+
+<p><strong>遇到新词 ('coding', 'VBG')：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;coding&#39;</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="s1">&#39;VBG&#39;</span>
+
+<span class="c1"># &#39;coding&#39; 不在字典里</span>
+<span class="n">word_tag_counts</span><span class="p">[</span><span class="s1">&#39;coding&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">word_tag_counts</span><span class="p">[</span><span class="s1">&#39;coding&#39;</span><span class="p">][</span><span class="s1">&#39;VBG&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p><strong>最终结果：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;PRP&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>           <span class="c1"># I出现2次，都是PRP</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBP&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>        <span class="c1"># love出现2次，都是VBP</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>      <span class="c1"># Python出现1次，是NNP</span>
+    <span class="s1">&#39;coding&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBG&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>      <span class="c1"># coding出现1次，是VBG</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>              <span class="c1"># 句号出现2次</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_11">为什么要这样设计？</h3>
+<h4 id="_12">对比：只用一层字典</h4>
+<p><strong>错误做法：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 一层字典</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="mi">60</span><span class="p">}</span>  <span class="c1"># 怎么区分NN和VB？？？</span>
+</code></pre></div>
+
+<p><strong>问题：</strong>
+- 无法记录同一个词的不同词性
+- 丢失了重要信息！</p>
+<h4 id="_13">正确做法：两层字典</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>  <span class="c1"># 清楚记录！</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>优点：</strong>
+- 保留所有信息
+- 可以计算每个词的最常见标签
+- 可以统计歧义词的比例</p>
+<hr />
+<h2 id="_14">四、朴素词性标注算法</h2>
+<h3 id="_15">核心思想（超级简单！）</h3>
+<p><strong>算法：给每个词分配它最常见的词性</strong></p>
+<div class="codehilite"><pre><span></span><code>&quot;book&quot; → 在训练数据中：
+  - NN: 50次  ← 最多！
+  - VB: 10次
+
+决定：遇到&quot;book&quot;就标注为 NN
+</code></pre></div>
+
+<h3 id="_16">算法步骤</h3>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">从训练数据学习</span><span class="err">：</span><span class="n">统计每个词的各种词性出现次数</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">对每个词</span><span class="err">，</span><span class="n">找出出现最多的词性</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">给新数据标注时</span><span class="err">，</span><span class="n">查表分配最常见词性</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">如果遇到未知词</span><span class="err">（</span><span class="n">训练数据没见过</span><span class="err">），</span><span class="n">用特殊策略</span>
+</code></pre></div>
+
+<hr />
+<h3 id="1_1">第1步：找出每个词的最常见标签</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">maxtag</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">:</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">],</span>
+                  <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">x</span><span class="p">],</span>
+                  <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">maxtag</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="n">tags</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<p>假设：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>
+    <span class="s1">&#39;running&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBG&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="s1">&#39;the&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;DT&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>处理 'book'：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;book&#39;</span>
+<span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
+
+<span class="c1"># 排序标签，按出现次数降序</span>
+<span class="n">tags</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;NN&#39;</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">],</span>
+              <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">word_tag_counts</span><span class="p">[</span><span class="s1">&#39;book&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">],</span>
+              <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong><code>sorted()</code> 的工作过程：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 比较 &#39;NN&#39; 和 &#39;VB&#39;</span>
+<span class="c1"># lambda x: word_tag_counts[&#39;book&#39;][x]</span>
+<span class="c1"># x=&#39;NN&#39; → word_tag_counts[&#39;book&#39;][&#39;NN&#39;] = 50</span>
+<span class="c1"># x=&#39;VB&#39; → word_tag_counts[&#39;book&#39;][&#39;VB&#39;] = 10</span>
+
+<span class="c1"># 按次数排序（降序）</span>
+<span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;NN&#39;</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">]</span>  <span class="c1"># NN的次数(50) &gt; VB的次数(10)</span>
+
+<span class="c1"># 取第一个（最多的）</span>
+<span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;book&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tags</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># &#39;NN&#39;</span>
+</code></pre></div>
+
+<p><strong>处理 'running'：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;running&#39;</span>
+<span class="n">word_tag_counts</span><span class="p">[</span><span class="s1">&#39;running&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;VBG&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
+
+<span class="c1"># VBG出现30次，NN出现5次</span>
+<span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;VBG&#39;</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">]</span>
+<span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;running&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;VBG&#39;</span>
+</code></pre></div>
+
+<p><strong>最终结果：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">maxtag</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="s1">&#39;NN&#39;</span><span class="p">,</span>      <span class="c1"># book最常见的是名词</span>
+    <span class="s1">&#39;running&#39;</span><span class="p">:</span> <span class="s1">&#39;VBG&#39;</span><span class="p">,</span>  <span class="c1"># running最常见的是动名词</span>
+    <span class="s1">&#39;the&#39;</span><span class="p">:</span> <span class="s1">&#39;DT&#39;</span>        <span class="c1"># the总是限定词</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_1">第2步：标注测试数据</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">test_file</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">wd</span><span class="p">,</span> <span class="n">truetag</span> <span class="ow">in</span> <span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">maxtag</span><span class="p">:</span>
+            <span class="n">newtag</span> <span class="o">=</span> <span class="n">maxtag</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span>  <span class="c1"># 查表</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">newtag</span> <span class="o">=</span> <span class="n">tag_unknown</span><span class="p">(</span><span class="n">wd</span><span class="p">)</span>  <span class="c1"># 未知词</span>
+
+        <span class="c1"># 比较正确率</span>
+        <span class="k">if</span> <span class="n">newtag</span> <span class="o">==</span> <span class="n">truetag</span><span class="p">:</span>
+            <span class="n">correct</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">alltest</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<p><strong>测试数据：</strong></p>
+<div class="codehilite"><pre><span></span><code>The/DT book/NN is/VBZ interesting/JJ ./.
+</code></pre></div>
+
+<p><strong>标注过程：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 词1：&quot;The&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;The&#39;</span>
+<span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;DT&#39;</span>  <span class="c1"># 正确答案</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;The&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;DT&#39;</span>  <span class="c1"># 我们的预测</span>
+<span class="n">newtag</span> <span class="o">==</span> <span class="n">truetag</span>  <span class="c1"># True ✅ 正确！</span>
+<span class="n">correct</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># 词2：&quot;book&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;book&#39;</span>
+<span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;NN&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;book&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;NN&#39;</span>
+<span class="n">newtag</span> <span class="o">==</span> <span class="n">truetag</span>  <span class="c1"># True ✅ 正确！</span>
+<span class="n">correct</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># 词3：&quot;is&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;is&#39;</span>
+<span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;VBZ&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;is&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;VBZ&#39;</span>
+<span class="n">newtag</span> <span class="o">==</span> <span class="n">truetag</span>  <span class="c1"># True ✅ 正确！</span>
+<span class="n">correct</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># 词4：&quot;interesting&quot;（假设训练数据没见过）</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;interesting&#39;</span>
+<span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;JJ&#39;</span>
+<span class="n">wd</span> <span class="ow">in</span> <span class="n">maxtag</span>  <span class="c1"># False！未知词</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">tag_unknown</span><span class="p">(</span><span class="s1">&#39;interesting&#39;</span><span class="p">)</span>  <span class="c1"># 用猜测策略</span>
+<span class="c1"># （取决于具体实现）</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_17">五、处理未知词（重要！）</h2>
+<h3 id="_18">问题</h3>
+<div class="codehilite"><pre><span></span><code>训练数据：只见过 10,000 个不同的词
+测试数据：出现了新词 &quot;coronavirus&quot;
+
+怎么办？
+</code></pre></div>
+
+<h3 id="1unk">策略1：全部标记为UNK（最差）</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">tag_unknown</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;UNK&#39;</span>  <span class="c1"># 未知标签（肯定错误）</span>
+</code></pre></div>
+
+<p><strong>结果：</strong>所有未知词都错误</p>
+<hr />
+<h3 id="2_2">策略2：使用最常见标签</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">tag_unknown</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;NN&#39;</span>  <span class="c1"># 名词最常见</span>
+</code></pre></div>
+
+<p><strong>原理：</strong>
+- 统计发现：英语中名词最常见（约30%）
+- 猜名词有30%的正确率</p>
+<hr />
+<h3 id="3">策略3：基于规则猜测（最好！）</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">tag_unknown</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>
+    <span class="c1"># 规则1：首字母大写 → 专有名词</span>
+    <span class="k">if</span> <span class="n">wd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s1">&#39;NNP&#39;</span>
+
+    <span class="c1"># 规则2：包含连字符 → 形容词</span>
+    <span class="k">if</span> <span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">wd</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;JJ&#39;</span>
+
+    <span class="c1"># 规则3：包含数字 → 基数词</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">char</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">wd</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;CD&#39;</span>
+
+    <span class="c1"># 规则4：以-ing结尾 → 动名词</span>
+    <span class="k">if</span> <span class="n">wd</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;ing&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;VBG&#39;</span>
+
+    <span class="c1"># 规则5：以-ly结尾 → 副词</span>
+    <span class="k">if</span> <span class="n">wd</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;ly&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;RB&#39;</span>
+
+    <span class="c1"># 规则6：以-s结尾 → 复数名词</span>
+    <span class="k">if</span> <span class="n">wd</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;NNS&#39;</span>
+
+    <span class="c1"># 规则7：以-ed结尾 → 过去式动词</span>
+    <span class="k">if</span> <span class="n">wd</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;ed&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;VBD&#39;</span>
+
+    <span class="c1"># 默认：名词</span>
+    <span class="k">return</span> <span class="s1">&#39;NN&#39;</span>
+</code></pre></div>
+
+<p><strong>规则详解：</strong></p>
+<h4 id="1-nnp">规则1：首字母大写 → NNP（专有名词）</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">wd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s1">&#39;NNP&#39;</span>
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>Beijing → 首字母B大写 → NNP（北京）
+Python → 首字母P大写 → NNP（Python语言）
+John → 首字母J大写 → NNP（人名）
+</code></pre></div>
+
+<p><strong>为什么有效？</strong>
+- 英语中，专有名词（地名、人名、品牌名）首字母大写
+- 准确率很高！</p>
+<h4 id="2-jj">规则2：包含连字符 → JJ（形容词）</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">wd</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s1">&#39;JJ&#39;</span>
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>well-known → 包含&#39;-&#39; → JJ（著名的）
+state-of-the-art → 包含&#39;-&#39; → JJ（最先进的）
+</code></pre></div>
+
+<h4 id="3-cd">规则3：包含数字 → CD（基数词）</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">digitRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;\d&#39;</span><span class="p">)</span>  <span class="c1"># 匹配任意数字</span>
+<span class="k">if</span> <span class="n">digitRE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;CD&#39;</span>
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">123</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">包含数字</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">CD</span>
+<span class="mf">3.14</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">包含数字</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">CD</span>
+<span class="n">year2023</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">包含数字</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">CD</span>
+</code></pre></div>
+
+<h4 id="4-ing-vbg">规则4：后缀-ing → VBG（动名词）</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">wd</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;ing&#39;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;VBG&#39;</span>
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>running → 以ing结尾 → VBG
+swimming → 以ing结尾 → VBG
+interesting → 以ing结尾 → VBG
+</code></pre></div>
+
+<p><strong>注意：</strong>不是100%准确</p>
+<div class="codehilite"><pre><span></span><code>thing → 以ing结尾，但是名词NN，不是VBG
+king → 以ing结尾，但是名词NN
+
+但大部分情况下VBG是对的！
+</code></pre></div>
+
+<h4 id="5-ly-rb">规则5：后缀-ly → RB（副词）</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">wd</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;ly&#39;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;RB&#39;</span>
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>quickly → 以ly结尾 → RB（快速地）
+happily → 以ly结尾 → RB（快乐地）
+slowly → 以ly结尾 → RB（慢慢地）
+</code></pre></div>
+
+<hr />
+<h3 id="_19">规则的优先级</h3>
+<p><strong>为什么顺序重要？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 假设处理词：&quot;Running&quot;（首字母大写）</span>
+
+<span class="c1"># 如果先检查-ing：</span>
+<span class="k">if</span> <span class="n">wd</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;ing&#39;</span><span class="p">):</span>  <span class="c1"># True</span>
+    <span class="k">return</span> <span class="s1">&#39;VBG&#39;</span>  <span class="c1"># 返回VBG（可能错！）</span>
+
+<span class="c1"># 如果先检查大写：</span>
+<span class="k">if</span> <span class="n">wd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>  <span class="c1"># True</span>
+    <span class="k">return</span> <span class="s1">&#39;NNP&#39;</span>  <span class="c1"># 返回NNP（专有名词，可能对！）</span>
+</code></pre></div>
+
+<p><strong>建议顺序（代码中的顺序）：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">首字母大写</span><span class="err">（</span><span class="n">最特殊</span><span class="err">）</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">包含连字符</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">包含数字</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">后缀规则</span><span class="err">（</span><span class="o">-</span><span class="n">ed</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">ing</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">ly等</span><span class="err">）</span>
+<span class="mf">5.</span><span class="w"> </span><span class="n">默认值</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_20">六、计算准确率和统计</h2>
+<h3 id="accuracy">准确率（Accuracy）</h3>
+<p><strong>公式：</strong></p>
+<div class="codehilite"><pre><span></span><code>准确率 = 正确标注的词数 / 总词数 × 100%
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>测试数据有100个词
+正确标注了85个
+
+准确率 = 85 / 100 = 0.85 = 85%
+</code></pre></div>
+
+<h3 id="_21">代码实现</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">correct</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 正确数量</span>
+<span class="n">alltest</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 总数量</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">test_file</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">wd</span><span class="p">,</span> <span class="n">truetag</span> <span class="ow">in</span> <span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="n">newtag</span> <span class="o">=</span> <span class="n">predict_tag</span><span class="p">(</span><span class="n">wd</span><span class="p">)</span>  <span class="c1"># 预测标签</span>
+        <span class="n">alltest</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">newtag</span> <span class="o">==</span> <span class="n">truetag</span><span class="p">:</span>
+            <span class="n">correct</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">accuracy</span> <span class="o">=</span> <span class="p">(</span><span class="n">correct</span> <span class="o">/</span> <span class="n">alltest</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;准确率: </span><span class="si">{</span><span class="n">accuracy</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_22">歧义词统计</h3>
+<p><strong>什么是歧义词？</strong></p>
+<p>一个词有多个可能的词性</p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>  <span class="c1"># 歧义词（2个标签）</span>
+    <span class="s1">&#39;the&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;DT&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">},</span>           <span class="c1"># 非歧义词（1个标签）</span>
+    <span class="s1">&#39;can&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;MD&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>     <span class="c1"># 歧义词（2个标签）</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>统计歧义词比例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">ambiguous_types</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 歧义词种类数</span>
+<span class="n">all_types</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_tag_counts</span><span class="p">)</span>  <span class="c1"># 总词种类数</span>
+
+<span class="k">for</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">:</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># 有多个标签</span>
+        <span class="n">ambiguous_types</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">proportion</span> <span class="o">=</span> <span class="p">(</span><span class="n">ambiguous_types</span> <span class="o">/</span> <span class="n">all_types</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;歧义词比例: </span><span class="si">{</span><span class="n">proportion</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>   <span class="c1"># len=2，歧义</span>
+    <span class="s1">&#39;the&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;DT&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">},</span>             <span class="c1"># len=1，非歧义</span>
+    <span class="s1">&#39;can&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;MD&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>      <span class="c1"># len=2，歧义</span>
+    <span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>      <span class="c1"># len=2，歧义</span>
+<span class="p">}</span>
+
+<span class="n">all_types</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">ambiguous_types</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># book, can, run</span>
+
+<span class="n">proportion</span> <span class="o">=</span> <span class="mi">3</span><span class="o">/</span><span class="mi">4</span> <span class="o">=</span> <span class="mf">0.75</span> <span class="o">=</span> <span class="mi">75</span><span class="o">%</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_23">七、完整执行示例（手工模拟）</h2>
+<h3 id="_24">训练数据</h3>
+<div class="codehilite"><pre><span></span><code>I/PRP love/VBP Python/NNP ./.
+I/PRP love/VBP coding/VBG ./.
+The/DT book/NN is/VBZ good/JJ ./.
+I/PRP book/VB tickets/NNS ./.
+</code></pre></div>
+
+<h3 id="1word_tag_counts">步骤1：构建word_tag_counts</h3>
+<p><strong>逐行处理：</strong></p>
+<p><strong>第1行：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;PRP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>第2行：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;PRP&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>        <span class="c1"># +1</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBP&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>     <span class="c1"># +1</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;coding&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBG&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>   <span class="c1"># 新词</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>           <span class="c1"># +1</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>第3行：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;PRP&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBP&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;coding&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBG&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;The&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;DT&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>       <span class="c1"># 新词</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>      <span class="c1"># 新词</span>
+    <span class="s1">&#39;is&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBZ&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>       <span class="c1"># 新词</span>
+    <span class="s1">&#39;good&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;JJ&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>      <span class="c1"># 新词</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>           <span class="c1"># +1</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>第4行：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;PRP&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>        <span class="c1"># +1</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBP&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNP&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;coding&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBG&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;The&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;DT&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>  <span class="c1"># &#39;book&#39;作为VB出现！</span>
+    <span class="s1">&#39;is&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBZ&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;good&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;JJ&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;tickets&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NNS&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>  <span class="c1"># 新词</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>           <span class="c1"># +1</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_3">步骤2：计算最常见标签</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">maxtag</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="s1">&#39;PRP&#39;</span><span class="p">,</span>       <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="s1">&#39;VBP&#39;</span><span class="p">,</span>    <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;Python&#39;</span><span class="p">:</span> <span class="s1">&#39;NNP&#39;</span><span class="p">,</span>  <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;coding&#39;</span><span class="p">:</span> <span class="s1">&#39;VBG&#39;</span><span class="p">,</span>  <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;The&#39;</span><span class="p">:</span> <span class="s1">&#39;DT&#39;</span><span class="p">,</span>      <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="s1">&#39;NN&#39;</span><span class="p">,</span>     <span class="c1"># NN:1, VB:1 → 都是1，取第一个</span>
+    <span class="s1">&#39;is&#39;</span><span class="p">:</span> <span class="s1">&#39;VBZ&#39;</span><span class="p">,</span>      <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;good&#39;</span><span class="p">:</span> <span class="s1">&#39;JJ&#39;</span><span class="p">,</span>     <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;tickets&#39;</span><span class="p">:</span> <span class="s1">&#39;NNS&#39;</span><span class="p">,</span> <span class="c1"># 只有1个标签</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="s1">&#39;.&#39;</span>          <span class="c1"># 只有1个标签</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_1">步骤3：标注测试数据</h3>
+<p><strong>测试数据：</strong></p>
+<div class="codehilite"><pre><span></span><code>I/PRP book/VB a/DT flight/NN ./.
+</code></pre></div>
+
+<p><strong>标注过程：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 词1：&quot;I&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;PRP&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;PRP&#39;</span>  <span class="err">✅</span> <span class="n">正确</span>
+<span class="n">correct</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># 词2：&quot;book&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;book&#39;</span><span class="p">,</span> <span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;VB&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;book&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;NN&#39;</span>  <span class="err">❌</span> <span class="n">错误</span><span class="err">（</span><span class="n">我们猜的是名词</span><span class="err">）</span>
+<span class="n">correct</span> <span class="o">=</span> <span class="mi">1</span><span class="err">（</span><span class="n">不变</span><span class="err">）</span>
+
+<span class="c1"># 词3：&quot;a&quot;（未知词，训练数据没有）</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;DT&#39;</span>
+<span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">maxtag</span>  <span class="c1"># True</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">tag_unknown</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+<span class="c1"># &#39;a&#39;不满足任何规则，返回默认&#39;NN&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="s1">&#39;NN&#39;</span>  <span class="err">❌</span> <span class="n">错误</span>
+<span class="n">correct</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># 词4：&quot;flight&quot;（未知词）</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;flight&#39;</span><span class="p">,</span> <span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;NN&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">tag_unknown</span><span class="p">(</span><span class="s1">&#39;flight&#39;</span><span class="p">)</span>
+<span class="c1"># 不满足特殊规则，返回默认&#39;NN&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="s1">&#39;NN&#39;</span>  <span class="err">✅</span> <span class="n">正确</span><span class="err">（</span><span class="n">运气好</span><span class="err">！）</span>
+<span class="n">correct</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># 词5：&quot;.&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">truetag</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span>
+<span class="n">newtag</span> <span class="o">=</span> <span class="n">maxtag</span><span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span>  <span class="err">✅</span> <span class="n">正确</span>
+<span class="n">correct</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="c1"># 总结</span>
+<span class="n">alltest</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">correct</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">accuracy</span> <span class="o">=</span> <span class="mi">3</span><span class="o">/</span><span class="mi">5</span> <span class="o">=</span> <span class="mf">0.6</span> <span class="o">=</span> <span class="mi">60</span><span class="o">%</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_25">八、算法局限性</h2>
+<h3 id="1_2">问题1：无法利用上下文</h3>
+<div class="codehilite"><pre><span></span><code>句子1：&quot;I will book a ticket&quot;
+句子2：&quot;I read a book&quot;
+
+朴素标注器：
+都标注 &quot;book&quot; 为 NN（最常见）
+
+但句子1中应该是VB（动词）！
+</code></pre></div>
+
+<p><strong>为什么？</strong>
+- 只看单词本身，不看前后文
+- 不知道 "will" 后面通常是动词</p>
+<hr />
+<h3 id="2_4">问题2：未知词处理不准确</h3>
+<div class="codehilite"><pre><span></span><code>未知词：&quot;beautifully&quot;
+
+规则猜测：
+wd.endswith(&#39;ly&#39;) → RB（副词）✅ 正确
+
+但是：
+未知词：&quot;family&quot;
+wd.endswith(&#39;ly&#39;) → RB  ❌ 错误（应该是NN）
+</code></pre></div>
+
+<p><strong>为什么？</strong>
+- 后缀规则不是100%准确
+- 需要更复杂的机器学习方法</p>
+<hr />
+<h3 id="3_2">问题3：歧义词选择不一定对</h3>
+<div class="codehilite"><pre><span></span><code>&quot;book&quot; 在训练数据：
+NN: 50次
+VB: 10次
+
+朴素标注器总是选NN
+
+但在某些句子中，应该是VB：
+&quot;Please book a table&quot;
+</code></pre></div>
+
+<p><strong>为什么？</strong>
+- 只选最常见的，忽略语境
+- 对少见用法错误率高</p>
+<hr />
+<h2 id="_26">九、改进方向</h2>
+<h3 id="1-hmm">1. 隐马尔可夫模型（HMM）</h3>
+<p>考虑前一个词的标签：</p>
+<div class="codehilite"><pre><span></span><code>P(VB | will) &gt; P(NN | will)
+→ &quot;will&quot; 后面更可能是动词
+</code></pre></div>
+
+<h3 id="2-crf">2. 条件随机场（CRF）</h3>
+<p>考虑整个句子的上下文</p>
+<h3 id="3_3">3. 神经网络</h3>
+<p>使用深度学习（LSTM, BERT等）</p>
+<hr />
+<h2 id="_27">十、纸笔考试重点</h2>
+<h3 id="_28">必须掌握</h3>
+<ol>
+<li>✅ <strong>两层字典结构</strong></li>
+<li>格式：<code>{word: {tag: count}}</code></li>
+<li>为什么需要两层</li>
+<li>
+<p>如何更新计数</p>
+</li>
+<li>
+<p>✅ <strong>朴素标注算法</strong></p>
+</li>
+<li>原理：最常见标签</li>
+<li>如何找最常见标签</li>
+<li>
+<p>代码实现</p>
+</li>
+<li>
+<p>✅ <strong>未知词处理</strong></p>
+</li>
+<li>为什么有未知词</li>
+<li>常见规则（-ing, -ly等）</li>
+<li>
+<p>规则优先级</p>
+</li>
+<li>
+<p>✅ <strong>准确率计算</strong></p>
+</li>
+<li>公式：正确数/总数</li>
+<li>手工计算示例</li>
+</ol>
+<h3 id="_29">可能的考题</h3>
+<h4 id="1_3">题型1：构建两层字典</h4>
+<p><strong>题目：</strong>给定数据，构建<code>word_tag_counts</code></p>
+<div class="codehilite"><pre><span></span><code>run/VB fast/RB ./.
+run/NN is/VBZ fun/JJ ./.
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>  <span class="c1"># run有2种用法</span>
+    <span class="s1">&#39;fast&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;RB&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;is&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;VBZ&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;JJ&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="2_5">题型2：未知词标注</h4>
+<p><strong>题目：</strong>用规则标注这些未知词</p>
+<ol>
+<li><code>Beijing</code></li>
+<li><code>quickly</code></li>
+<li><code>swimming</code></li>
+<li><code>123</code></li>
+</ol>
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span> <span class="n">Beijing</span>
+   <span class="o">-</span> <span class="n">首字母大写</span> <span class="err">→</span> <span class="n">NNP</span><span class="err">（</span><span class="n">专有名词</span><span class="err">）</span>
+
+<span class="mf">2.</span> <span class="n">quickly</span>
+   <span class="o">-</span> <span class="n">以</span><span class="s1">&#39;ly&#39;</span><span class="n">结尾</span> <span class="err">→</span> <span class="n">RB</span><span class="err">（</span><span class="n">副词</span><span class="err">）</span>
+
+<span class="mf">3.</span> <span class="n">swimming</span>
+   <span class="o">-</span> <span class="n">以</span><span class="s1">&#39;ing&#39;</span><span class="n">结尾</span> <span class="err">→</span> <span class="n">VBG</span><span class="err">（</span><span class="n">动名词</span><span class="err">）</span>
+
+<span class="mf">4.</span> <span class="mi">123</span>
+   <span class="o">-</span> <span class="n">包含数字</span> <span class="err">→</span> <span class="n">CD</span><span class="err">（</span><span class="n">基数词</span><span class="err">）</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="3_4">题型3：计算准确率</h4>
+<p><strong>题目：</strong></p>
+<p>训练数据：</p>
+<div class="codehilite"><pre><span></span><code>love: {&#39;VBP&#39;: 10, &#39;NN&#39;: 2}
+book: {&#39;NN&#39;: 5, &#39;VB&#39;: 1}
+</code></pre></div>
+
+<p>测试数据：</p>
+<div class="codehilite"><pre><span></span><code>I/PRP love/VBP books/NNS ./.
+</code></pre></div>
+
+<p>计算准确率（未知词都标为NN）</p>
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>标注过程：
+1. I → 未知 → NN（错，应该是PRP）❌
+2. love → 最常见VBP → VBP ✅
+3. books → 未知，以&#39;s&#39;结尾 → NNS ✅
+4. . → 未知 → NN（错，应该是.）❌
+
+正确：2个
+总数：4个
+准确率 = 2/4 = 50%
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h2 id="_30">十一、记忆口诀</h2>
+<h3 id="_31">两层字典</h3>
+<div class="codehilite"><pre><span></span><code>外层存单词，
+内层存标签，
+值是出现次数，
+字典套字典。
+</code></pre></div>
+
+<h3 id="_32">朴素标注</h3>
+<div class="codehilite"><pre><span></span><code>统计词标签，
+选择最常见，
+未知用规则，
+简单但有效。
+</code></pre></div>
+
+<h3 id="_33">未知词规则</h3>
+<div class="codehilite"><pre><span></span><code>大写是专名，
+-ing是动名，
+-ly是副词，
+-ed是过去。
+</code></pre></div>
+
+<hr />
+<h2 id="_34">十二、常见错误</h2>
+<h3 id="1_4">❌ 错误1：字典层级搞反</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">}</span>  <span class="err">❌</span>
+<span class="p">}</span>
+
+<span class="c1"># 正确</span>
+<span class="n">word_tag_counts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;book&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NN&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;VB&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>  <span class="err">✅</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="2_6">❌ 错误2：忘记检查键是否存在</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="err">❌</span>
+<span class="c1"># 如果wd或tag不存在，会报错KeyError</span>
+
+<span class="c1"># 正确</span>
+<span class="k">if</span> <span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">:</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">]:</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">word_tag_counts</span><span class="p">[</span><span class="n">wd</span><span class="p">][</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="err">✅</span>
+</code></pre></div>
+
+<h3 id="3_5">❌ 错误3：分割字符串错误</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;The/DT dog/NN&quot;</span>
+
+<span class="c1"># 错误</span>
+<span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="c1"># [&#39;The&#39;, &#39;DT dog&#39;, &#39;NN&#39;]  不对！</span>
+
+<span class="c1"># 正确</span>
+<span class="n">words</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>  <span class="c1"># 先按空格分</span>
+<span class="k">for</span> <span class="n">wdtag</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">wdtag</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>  <span class="c1"># 再按/分</span>
+</code></pre></div>
+
+<hr />
+<p><strong>祝你考试顺利！</strong> 🎉</p>
+<p>记住：
+- 两层字典是核心数据结构
+- 朴素标注=选最常见标签
+- 未知词用规则猜测
+- 理解原理比记代码重要！</p></body>
+</html>

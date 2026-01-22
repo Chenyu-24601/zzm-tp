@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>Lecture 4 复习笔记 - Zipf定律</title>
+<style>
+* {margin:0; padding:0; box-sizing:border-box;}
+body {font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; line-height:1.8; color:#2c3e50; padding:40px; max-width:900px; margin:0 auto;}
+h1 {color:#1a1a1a; font-size:32px; margin:40px 0 20px 0; padding-bottom:15px; border-bottom:4px solid #3498db;}
+h2 {color:#2c3e50; font-size:24px; margin:35px 0 15px 0; padding-left:15px; border-left:5px solid #3498db;}
+h3 {color:#34495e; font-size:20px; margin:25px 0 12px 0;}
+h4 {color:#555; font-size:16px; margin:20px 0 10px 0;}
+p {margin:12px 0; font-size:15px;}
+strong {color:#e74c3c; font-weight:700;}
+em {color:#16a085;}
+code {background:#f5f5f5; color:#c7254e; padding:3px 6px; border-radius:4px; font-family:Monaco,Consolas,monospace; font-size:14px;}
+pre {background:#f8f9fa; border:1px solid #e1e4e8; border-left:4px solid #3498db; border-radius:6px; padding:20px; margin:20px 0; overflow-x:auto;}
+pre code {background:transparent; color:#24292e; padding:0; font-size:13px; display:block;}
+ul,ol {margin:15px 0; padding-left:30px;}
+li {margin:8px 0;}
+table {width:100%; border-collapse:collapse; margin:20px 0; font-size:14px;}
+table th {background:#3498db; color:white; padding:12px; text-align:left;}
+table td {border:1px solid #ddd; padding:12px;}
+table tr:nth-child(even) {background:#f8f9fa;}
+details {background:#e8f5e9; border:1px solid #4caf50; border-radius:6px; padding:15px; margin:15px 0;}
+summary {cursor:pointer; font-weight:600; color:#2e7d32; padding:5px;}
+@media print {
+  body {padding:20px; font-size:12pt;}
+  h1 {page-break-before:always; font-size:24pt;}
+  h1:first-of-type {page-break-before:avoid;}
+  h2 {page-break-after:avoid; font-size:18pt;}
+  pre,table {page-break-inside:avoid;}
+}
+</style>
+</head>
+<body><h1 id="lecture-4-zipf">Lecture 4 超基础复习笔记 - Zipf定律（齐夫定律）</h1>
+<h2 id="zipf">零、先理解问题（什么是Zipf定律？）</h2>
+<h3 id="_1">一个神奇的现象</h3>
+<p>想象你统计一本书中所有单词的出现次数：</p>
+<div class="codehilite"><pre><span></span><code>第1名（最常见）：&quot;the&quot; 出现 10,000 次
+第2名：&quot;of&quot;  出现  5,000 次  （大约是第1名的一半）
+第3名：&quot;and&quot; 出现  3,333 次  （大约是第1名的1/3）
+第4名：&quot;a&quot;   出现  2,500 次  （大约是第1名的1/4）
+...
+</code></pre></div>
+
+<p><strong>发现规律了吗？</strong></p>
+<div class="codehilite"><pre><span></span><code>第N名的词出现次数 ≈ 第1名出现次数 / N
+</code></pre></div>
+
+<p>这就是 <strong>Zipf定律</strong>！</p>
+<h3 id="_2">用数学公式表达</h3>
+<p><strong>Zipf定律：</strong></p>
+<div class="codehilite"><pre><span></span><code>频率 ∝ 1 / 排名
+
+或写成：
+f(r) = C / r
+
+其中：
+- f(r) = 排名为r的词的频率
+- r = 排名（1, 2, 3, ...）
+- C = 常数
+- ∝ 表示&quot;成正比&quot;
+</code></pre></div>
+
+<hr />
+<h2 id="zipf_1">一、为什么Zipf定律重要？</h2>
+<h3 id="1">1. 语言的普遍规律</h3>
+<p><strong>惊人的事实：</strong>
+- 英语符合Zipf定律
+- 中文符合Zipf定律
+- 其他几乎所有语言都符合！</p>
+<p><strong>不仅仅是语言：</strong>
+- 城市人口分布
+- 公司规模分布
+- 网站访问量分布</p>
+<p>都遵循类似的幂律！</p>
+<h3 id="2">2. 实际应用</h3>
+<p><strong>文本压缩：</strong></p>
+<div class="codehilite"><pre><span></span><code>常见词&quot;the&quot;出现10,000次
+只需要用短编码（如：1bit）
+
+罕见词&quot;antidisestablishmentarianism&quot;出现1次
+用长编码也没关系
+</code></pre></div>
+
+<p><strong>搜索引擎：</strong></p>
+<div class="codehilite"><pre><span></span><code>只需索引最常见的135个词
+就能覆盖50%的文本内容
+</code></pre></div>
+
+<hr />
+<h2 id="brown">二、Brown语料库的例子（真实数据）</h2>
+<div class="codehilite"><pre><span></span><code>排名    单词    频率      占比
+1       the     69,971    6.98%
+2       of      36,411    3.63%
+3       and     28,852    2.88%
+10      in      21,341    2.13%
+20      at       8,893    0.89%
+100     way      1,460    0.15%
+</code></pre></div>
+
+<p><strong>观察：</strong></p>
+<div class="codehilite"><pre><span></span><code>第1名频率 / 第2名频率 = 69,971 / 36,411 ≈ 1.92 ≈ 2
+第1名频率 / 第3名频率 = 69,971 / 28,852 ≈ 2.42 ≈ 3
+</code></pre></div>
+
+<p>接近Zipf定律的预测！</p>
+<hr />
+<h2 id="moby-dick">三、实验任务（用Moby Dick验证）</h2>
+<h3 id="_3">步骤概览</h3>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">读取文本文件</span><span class="err">（</span><span class="n">Moby</span><span class="w"> </span><span class="n">Dick小说</span><span class="err">）</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">统计每个单词的出现次数</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">按频率降序排序</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">绘制三种图表验证Zipf定律</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_4">四、代码详细讲解（逐行解释）</h2>
+<h3 id="1_1">第1部分：统计词频</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="n">wordRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;\w+&#39;</span><span class="p">)</span>
+<span class="n">wdcounts</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">infs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">infs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wdcounts</span><span class="p">:</span>
+                    <span class="n">wdcounts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">wdcounts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<h4 id="_5">逐行解释</h4>
+<p><strong>1. 正则表达式</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wordRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;\w+&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong><code>\w</code> 是什么？</strong>
+- <code>\w</code> = word character（单词字符）
+- 匹配：字母、数字、下划线
+- 等价于：<code>[A-Za-z0-9_]</code></p>
+<p><strong><code>+</code> 的作用：</strong>
+- 至少匹配1次，可以多次
+- <code>\w+</code> = 一个或多个单词字符</p>
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Hello, world! 123&quot;</span>
+<span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="c1"># 结果：[&#39;Hello&#39;, &#39;world&#39;, &#39;123&#39;]</span>
+</code></pre></div>
+
+<p><strong>为什么不匹配逗号和感叹号？</strong>
+- 因为它们不是<code>\w</code>（不是字母、数字、下划线）</p>
+<hr />
+<p><strong>2. 创建空字典</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wdcounts</span> <span class="o">=</span> <span class="p">{}</span>
+</code></pre></div>
+
+<ul>
+<li>用来存储：<code>{单词: 出现次数}</code></li>
+</ul>
+<hr />
+<p><strong>3. 读取文件</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">infs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">infs</span><span class="p">:</span>
+</code></pre></div>
+
+<p><strong>执行流程：</strong></p>
+<div class="codehilite"><pre><span></span><code>外层循环：遍历每个文件
+  内层循环：遍历文件的每一行
+</code></pre></div>
+
+<hr />
+<p><strong>4. 提取单词并转小写</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">wordRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+</code></pre></div>
+
+<p><strong><code>line.lower()</code> 的作用：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;The CAT&quot;</span>
+<span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  <span class="c1"># &quot;the cat&quot;</span>
+</code></pre></div>
+
+<p><strong>为什么要转小写？</strong></p>
+<div class="codehilite"><pre><span></span><code>不转小写：
+  &quot;The&quot;: 100次
+  &quot;the&quot;: 500次  ← 其实是同一个词！
+
+转小写后：
+  &quot;the&quot;: 600次  ← 正确！
+</code></pre></div>
+
+<hr />
+<p><strong>5. 更新计数</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wdcounts</span><span class="p">:</span>
+    <span class="n">wdcounts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">wdcounts</span><span class="p">[</span><span class="n">wd</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 处理句子：&quot;the cat and the dog&quot;</span>
+
+<span class="c1"># 词1：&quot;the&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s2">&quot;the&quot;</span>
+<span class="n">wdcounts</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wdcounts</span>  <span class="c1"># True</span>
+<span class="n">wdcounts</span><span class="p">[</span><span class="s2">&quot;the&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">wdcounts</span><span class="p">[</span><span class="s2">&quot;the&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 变成1</span>
+<span class="c1"># wdcounts = {&quot;the&quot;: 1}</span>
+
+<span class="c1"># 词2：&quot;cat&quot;</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s2">&quot;cat&quot;</span>
+<span class="n">wdcounts</span><span class="p">[</span><span class="s2">&quot;cat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">wdcounts</span><span class="p">[</span><span class="s2">&quot;cat&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># wdcounts = {&quot;the&quot;: 1, &quot;cat&quot;: 1}</span>
+
+<span class="c1"># 词3：&quot;and&quot;</span>
+<span class="n">wdcounts</span><span class="p">[</span><span class="s2">&quot;and&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># wdcounts = {&quot;the&quot;: 1, &quot;cat&quot;: 1, &quot;and&quot;: 1}</span>
+
+<span class="c1"># 词4：&quot;the&quot;（第二次出现）</span>
+<span class="n">wd</span> <span class="o">=</span> <span class="s2">&quot;the&quot;</span>
+<span class="n">wd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wdcounts</span>  <span class="c1"># False（已经存在）</span>
+<span class="c1"># 不执行 wdcounts[&quot;the&quot;] = 0</span>
+<span class="n">wdcounts</span><span class="p">[</span><span class="s2">&quot;the&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 1变成2</span>
+<span class="c1"># wdcounts = {&quot;the&quot;: 2, &quot;cat&quot;: 1, &quot;and&quot;: 1}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_1">第2部分：排序</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">words</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">wdcounts</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span><span class="n">wdcounts</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">wdcounts</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">]</span>
+</code></pre></div>
+
+<h4 id="sorted"><code>sorted()</code> 详解</h4>
+<p><strong>假设：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">wdcounts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;the&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s1">&#39;cat&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="s1">&#39;dog&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">800</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>排序过程：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">words</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">wdcounts</span><span class="p">,</span>
+              <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span><span class="n">wdcounts</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+</code></pre></div>
+
+<p><strong>参数说明：</strong>
+- <code>wdcounts</code> - 要排序的字典（实际上排序的是键）
+- <code>reverse=True</code> - 降序（从大到小）
+- <code>key=lambda v:wdcounts[v]</code> - 按值（频率）排序</p>
+<p><strong><code>lambda</code> 函数解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># lambda是匿名函数的简写</span>
+
+<span class="c1"># 完整写法：</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_freq</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">wdcounts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span>
+
+<span class="c1"># lambda简写：</span>
+<span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">wdcounts</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+</code></pre></div>
+
+<p><strong>排序执行：</strong></p>
+<div class="codehilite"><pre><span></span><code>比较&quot;the&quot;和&quot;cat&quot;：
+  key(&quot;the&quot;) = wdcounts[&quot;the&quot;] = 1000
+  key(&quot;cat&quot;) = wdcounts[&quot;cat&quot;] = 50
+  1000 &gt; 50，所以&quot;the&quot;排前面
+
+所有比较完成后（降序）：
+words = [&#39;the&#39;, &#39;a&#39;, &#39;dog&#39;, &#39;cat&#39;]
+         1000   800  100   50
+</code></pre></div>
+
+<hr />
+<h4 id="_6">列表推导式</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">freqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">wdcounts</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">]</span>
+</code></pre></div>
+
+<p><strong>展开理解：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 等价于：</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="n">freqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wdcounts</span><span class="p">[</span><span class="n">w</span><span class="p">])</span>
+
+<span class="c1"># 结果：</span>
+<span class="c1"># words = [&#39;the&#39;, &#39;a&#39;, &#39;dog&#39;, &#39;cat&#39;]</span>
+<span class="c1"># freqs = [1000, 800, 100, 50]</span>
+</code></pre></div>
+
+<p><strong>用途：</strong>
+- <code>words</code> - 单词列表（按频率排序）
+- <code>freqs</code> - 对应的频率列表</p>
+<hr />
+<h3 id="3">第3部分：打印统计信息</h3>
+<div class="codehilite"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TYPES: &#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TOKENS:&#39;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span>
+
+<span class="n">topN</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="k">for</span> <span class="n">wd</span> <span class="ow">in</span> <span class="n">words</span><span class="p">[:</span><span class="n">topN</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">wdcounts</span><span class="p">[</span><span class="n">wd</span><span class="p">])</span>
+</code></pre></div>
+
+<p><strong>术语解释：</strong></p>
+<p><strong>TYPES（类型数）= 不同单词的数量</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>  <span class="c1"># 有多少个不同的单词</span>
+
+<span class="n">例如</span><span class="err">：</span>
+<span class="s2">&quot;the cat and the dog&quot;</span>
+<span class="n">TYPES</span> <span class="o">=</span> <span class="mi">4</span>  <span class="err">（</span><span class="n">the</span><span class="p">,</span> <span class="n">cat</span><span class="p">,</span> <span class="ow">and</span><span class="p">,</span> <span class="n">dog</span><span class="err">）</span>
+</code></pre></div>
+
+<p><strong>TOKENS（标记数）= 单词出现的总次数</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nb">sum</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span>  <span class="c1"># 所有频率相加</span>
+
+<span class="n">例如</span><span class="err">：</span>
+<span class="s2">&quot;the cat and the dog&quot;</span>
+<span class="n">TOKENS</span> <span class="o">=</span> <span class="mi">5</span>  <span class="err">（</span><span class="mi">5</span><span class="n">个单词</span><span class="err">）</span>
+</code></pre></div>
+
+<p><strong>打印前200个词：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">words</span><span class="p">[:</span><span class="n">topN</span><span class="p">]</span>  <span class="c1"># 列表切片，取前200个</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_7">五、绘图部分（重点！）</h2>
+<h3 id="1-vs">图1：频率 vs 排名</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
+
+<span class="n">ranks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ranks</span><span class="p">,</span> <span class="n">freqs</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;freq vs rank&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<h4 id="range"><code>range()</code> 详解</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">ranks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>假设 <code>len(freqs) = 10000</code>：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10001</span><span class="p">)</span>
+<span class="c1"># 生成：1, 2, 3, ..., 9999, 10000</span>
+</code></pre></div>
+
+<p><strong>为什么从1开始？</strong>
+- 排名从第1名开始（不是第0名）</p>
+<p><strong>为什么是 <code>len(freqs)+1</code>？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># 生成：1, 2, 3, 4（不包括5）</span>
+
+<span class="n">所以要包括len</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span><span class="err">，</span><span class="n">需要len</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+</code></pre></div>
+
+<hr />
+<h4 id="pylab"><code>pylab</code> 绘图</h4>
+<p><strong>基本绘图步骤：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
+
+<span class="c1"># 1. 创建新图</span>
+<span class="n">p</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+
+<span class="c1"># 2. 绘制数据</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+<span class="c1"># 3. 添加标题</span>
+<span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;图表标题&#39;</span><span class="p">)</span>
+
+<span class="c1"># 4. 显示图表</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong><code>p.plot(ranks, freqs)</code> 的含义：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 绘制点：</span>
+<span class="c1"># (ranks[0], freqs[0])  → (1, 1000)</span>
+<span class="c1"># (ranks[1], freqs[1])  → (2, 500)</span>
+<span class="c1"># (ranks[2], freqs[2])  → (3, 333)</span>
+<span class="c1"># ...</span>
+</code></pre></div>
+
+<p><strong>结果图形：</strong></p>
+<div class="codehilite"><pre><span></span><code>频率 ↑
+    |
+1000|*
+    |
+ 500|  <span class="gs">*</span>
+<span class="gs">    |</span>
+<span class="gs"> 333|    *</span>
+    |      <span class="gs">*</span>
+<span class="gs">    |        *</span>**
+    |           ********
+    |___________________→ 排名
+       1  2  3  4  5...
+</code></pre></div>
+
+<p><strong>特点：</strong>陡降曲线（少数词频率很高，大多数词频率很低）</p>
+<hr />
+<h3 id="2-vs">图2：累积频率 vs 排名</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">cumulative</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span>  <span class="c1"># 复制列表</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cumulative</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ranks</span><span class="p">,</span> <span class="n">cumulative</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;cumulative freq vs rank&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<h4 id="_8">累积频率是什么？</h4>
+<p><strong>原始频率：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="err">排名</span><span class="o">:</span><span class="w">  </span><span class="mi">1</span><span class="w">     </span><span class="mi">2</span><span class="w">     </span><span class="mi">3</span><span class="w">     </span><span class="mi">4</span><span class="w">     </span><span class="mi">5</span>
+<span class="err">频率</span><span class="o">:</span><span class="w"> </span><span class="mi">1000</span><span class="w">  </span><span class="mi">500</span><span class="w">   </span><span class="mi">333</span><span class="w">   </span><span class="mi">250</span><span class="w">   </span><span class="mi">200</span>
+</code></pre></div>
+
+<p><strong>累积频率：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="err">排名</span><span class="o">:</span><span class="w">  </span><span class="mi">1</span><span class="w">     </span><span class="mi">2</span><span class="w">      </span><span class="mi">3</span><span class="w">       </span><span class="mi">4</span><span class="w">       </span><span class="mi">5</span>
+<span class="err">累积</span><span class="o">:</span><span class="w"> </span><span class="mi">1000</span><span class="w">  </span><span class="mi">1500</span><span class="w">   </span><span class="mi">1833</span><span class="w">    </span><span class="mi">2083</span><span class="w">    </span><span class="mi">2283</span>
+<span class="w">       </span><span class="err">↑</span><span class="w">     </span><span class="err">↑</span><span class="w">      </span><span class="err">↑</span><span class="w">       </span><span class="err">↑</span><span class="w">       </span><span class="err">↑</span>
+<span class="w">      </span><span class="mi">1000</span><span class="w">  </span><span class="mi">1000</span><span class="w">   </span><span class="mi">1000</span><span class="w">    </span><span class="mi">1000</span><span class="w">    </span><span class="mi">1000</span>
+<span class="w">           </span><span class="o">+</span><span class="w"> </span><span class="mi">500</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="mi">500</span><span class="w">   </span><span class="o">+</span><span class="w"> </span><span class="mi">500</span><span class="w">   </span><span class="o">+</span><span class="w"> </span><span class="mi">500</span>
+<span class="w">                  </span><span class="o">+</span><span class="w"> </span><span class="mi">333</span><span class="w">   </span><span class="o">+</span><span class="w"> </span><span class="mi">333</span><span class="w">   </span><span class="o">+</span><span class="w"> </span><span class="mi">333</span>
+<span class="w">                          </span><span class="o">+</span><span class="w"> </span><span class="mi">250</span><span class="w">   </span><span class="o">+</span><span class="w"> </span><span class="mi">250</span>
+<span class="w">                                  </span><span class="o">+</span><span class="w"> </span><span class="mi">200</span>
+</code></pre></div>
+
+<p><strong>计算过程：</strong></p>
+<div class="codehilite"><pre><span></span><code>cumulative[0] = freqs[0] = 1000
+cumulative[1] = freqs[1] + cumulative[0] = 500 + 1000 = 1500
+cumulative[2] = freqs[2] + cumulative[1] = 333 + 1500 = 1833
+cumulative[3] = freqs[3] + cumulative[2] = 250 + 1833 = 2083
+</code></pre></div>
+
+<hr />
+<h4 id="_9">代码详解</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">cumulative</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span>  <span class="c1"># 复制列表</span>
+</code></pre></div>
+
+<p><strong>为什么要复制？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误做法：</span>
+<span class="n">cumulative</span> <span class="o">=</span> <span class="n">freqs</span>  <span class="c1"># 只是引用，不是复制！</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">999</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># 也变成999了！❌</span>
+
+<span class="c1"># 正确做法：</span>
+<span class="n">cumulative</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span>  <span class="c1"># 创建新列表</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">999</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># 还是原来的值✅</span>
+</code></pre></div>
+
+<hr />
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cumulative</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</code></pre></div>
+
+<p><strong>为什么是 <code>len(cumulative) - 1</code>？</strong></p>
+<p>假设 <code>len(cumulative) = 5</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># 0, 1, 2, 3</span>
+
+<span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">:</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">:</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">:</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">:</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">如果用</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="err">：</span>
+<span class="n">i</span><span class="o">=</span><span class="mi">4</span><span class="p">:</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>  <span class="err">❌</span> <span class="n">越界</span><span class="err">！</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">cumulative</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">333</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span>
+
+<span class="c1"># i=0:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1"># cumulative[1] = 500 + 1000 = 1500</span>
+<span class="c1"># cumulative = [1000, 1500, 333, 250, 200]</span>
+
+<span class="c1"># i=1:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="c1"># cumulative[2] = 333 + 1500 = 1833</span>
+<span class="c1"># cumulative = [1000, 1500, 1833, 250, 200]</span>
+
+<span class="c1"># i=2:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="c1"># cumulative[3] = 250 + 1833 = 2083</span>
+<span class="c1"># cumulative = [1000, 1500, 1833, 2083, 200]</span>
+
+<span class="c1"># i=3:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="c1"># cumulative[4] = 200 + 2083 = 2283</span>
+<span class="c1"># cumulative = [1000, 1500, 1833, 2083, 2283]</span>
+</code></pre></div>
+
+<hr />
+<p><strong>累积图的意义：</strong></p>
+<div class="codehilite"><pre><span></span><code>累积频率 ↑
+        |
+  总词数 |________________
+        |          /
+        |        /
+        |      /
+        |    /
+        |  /
+        |/
+        |___________________→ 排名
+
+前135个高频词就能覆盖50%的文本！
+</code></pre></div>
+
+<hr />
+<h3 id="3log-log-zipf">图3：log-log 图（验证Zipf定律）</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">logfreqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">freqs</span><span class="p">]</span>
+<span class="n">logranks</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span> <span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="n">ranks</span><span class="p">]</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">logranks</span><span class="p">,</span> <span class="n">logfreqs</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;log-freq vs log-rank&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;log1.png&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<h4 id="_10">为什么要取对数？</h4>
+<p><strong>Zipf定律数学形式：</strong></p>
+<div class="codehilite"><pre><span></span><code>频率 = C / 排名
+freq = C / rank
+</code></pre></div>
+
+<p><strong>两边取对数：</strong></p>
+<div class="codehilite"><pre><span></span><code>log(freq) = log(C / rank)
+          = log(C) - log(rank)
+</code></pre></div>
+
+<p><strong>这是一条直线！</strong></p>
+<div class="codehilite"><pre><span></span><code>y = -x + log(C)
+↑   ↑    ↑
+log(freq) 斜率=-1  截距
+</code></pre></div>
+
+<p><strong>如果Zipf定律成立：</strong>
+- log-log图应该是<strong>一条直线</strong>
+- 斜率约为 <strong>-1</strong></p>
+<hr />
+<h4 id="_11">代码详解</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">logfreqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">freqs</span><span class="p">]</span>
+</code></pre></div>
+
+<p><strong><code>p.log()</code> 是什么？</strong>
+- pylab的对数函数
+- 默认是自然对数（ln，底数e）</p>
+<p><strong>列表推导式展开：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">logfreqs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">freqs</span><span class="p">:</span>
+    <span class="n">logfreqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">freq</span><span class="p">))</span>
+
+<span class="c1"># 例子：</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">125</span><span class="p">]</span>
+<span class="n">logfreqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">500</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">250</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">125</span><span class="p">)]</span>
+         <span class="err">≈</span> <span class="p">[</span><span class="mf">6.91</span><span class="p">,</span> <span class="mf">6.21</span><span class="p">,</span> <span class="mf">5.52</span><span class="p">,</span> <span class="mf">4.83</span><span class="p">]</span>
+</code></pre></div>
+
+<hr />
+<h4 id="psavefig-"><code>p.savefig()</code> - 保存图片</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">p</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;log1.png&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>作用：</strong>将图表保存为PNG图片文件</p>
+<p><strong>为什么要保存？</strong>
+- 可以放到报告里
+- 可以分享给别人
+- 不用每次重新运行代码</p>
+<hr />
+<h2 id="_12">六、完整执行示例（手工模拟）</h2>
+<h3 id="_13">输入数据（简化版）</h3>
+<div class="codehilite"><pre><span></span><code>文本：&quot;the cat and the dog and the bird&quot;
+</code></pre></div>
+
+<h3 id="1_2">步骤1：统计词频</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">wdcounts</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;the&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s1">&#39;cat&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;and&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;dog&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;bird&#39;</span><span class="p">:</span> <span class="mi">1</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="2_2">步骤2：排序</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 按频率降序</span>
+<span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;and&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">]</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre></div>
+
+<h3 id="3_1">步骤3：计算排名</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">ranks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+</code></pre></div>
+
+<h3 id="4freq-vs-rank">步骤4：绘制freq vs rank</h3>
+<div class="codehilite"><pre><span></span><code>频率 ↑
+   3 |*
+   2 |  <span class="gs">*</span>
+<span class="gs">   1 |    *</span> * *
+     |___________→ 排名
+       1 2 3 4 5
+</code></pre></div>
+
+<h3 id="5">步骤5：计算累积频率</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">cumulative</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
+<span class="c1"># 计算过程：</span>
+<span class="c1"># cumulative[0] = 3</span>
+<span class="c1"># cumulative[1] = 3 + 2 = 5</span>
+<span class="c1"># cumulative[2] = 5 + 1 = 6</span>
+<span class="c1"># cumulative[3] = 6 + 1 = 7</span>
+<span class="c1"># cumulative[4] = 7 + 1 = 8</span>
+</code></pre></div>
+
+<h3 id="6log">步骤6：计算log值</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="n">logranks</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+         <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.69</span><span class="p">,</span> <span class="mf">1.10</span><span class="p">,</span> <span class="mf">1.39</span><span class="p">,</span> <span class="mf">1.61</span><span class="p">]</span>
+
+<span class="n">logfreqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+         <span class="o">=</span> <span class="p">[</span><span class="mf">1.10</span><span class="p">,</span> <span class="mf">0.69</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+</code></pre></div>
+
+<h3 id="7log-log">步骤7：绘制log-log图</h3>
+<div class="codehilite"><pre><span></span><code>log(freq) ↑
+      1.1 |*
+      0.7 |  <span class="gs">*</span>
+<span class="gs">        0 |    *</span> * *
+          |___________→ log(rank)
+            0 0.7 1.1 1.4 1.6
+</code></pre></div>
+
+<hr />
+<h2 id="_14">七、为什么是直线？（数学证明）</h2>
+<h3 id="zipf_2">Zipf定律</h3>
+<div class="codehilite"><pre><span></span><code>频率 = C / 排名
+
+用符号表示：
+f = C / r
+</code></pre></div>
+
+<h3 id="_15">取对数</h3>
+<div class="codehilite"><pre><span></span><code>log(f) = log(C / r)
+       = log(C) - log(r)
+</code></pre></div>
+
+<h3 id="_16">整理成直线方程</h3>
+<div class="codehilite"><pre><span></span><code>y = mx + b 的形式
+
+log(f) = -log(r) + log(C)
+  ↑       ↑  ↑      ↑
+  y    斜率m x    截距b
+
+所以：
+- y = log(频率)
+- x = log(排名)
+- 斜率 m = -1
+- 截距 b = log(C)
+</code></pre></div>
+
+<p><strong>这就是一条斜率为-1的直线！</strong></p>
+<hr />
+<h2 id="moby-dick_1">八、实际结果（Moby Dick）</h2>
+<h3 id="_17">统计数据</h3>
+<div class="codehilite"><pre><span></span><code>TYPES（不同单词数）：约 17,000 个
+TOKENS（总单词数）：约 215,000 个
+
+前20个高频词：
+1. the: 14,431次  (6.7%)
+2. of: 6,609次    (3.1%)
+3. and: 6,430次   (3.0%)
+4. a: 4,736次     (2.2%)
+5. to: 4,625次    (2.1%)
+...
+</code></pre></div>
+
+<h3 id="log-log">log-log图结果</h3>
+<p><strong>观察：</strong>
+- 大部分点接近一条直线
+- 斜率约为 -1
+- <strong>证实了Zipf定律！</strong></p>
+<p><strong>偏差：</strong>
+- 最高频的几个词略高于直线（超常用词）
+- 最低频的词偏离较大（样本量小，统计误差）</p>
+<hr />
+<h2 id="zipf_3">九、Zipf定律的意义</h2>
+<h3 id="1_3">1. 语言的经济性</h3>
+<div class="codehilite"><pre><span></span><code>少数词承担大部分工作：
+- 前100个词 → 覆盖50%的文本
+- 前1000个词 → 覆盖80%的文本
+</code></pre></div>
+
+<p><strong>为什么？</strong>
+- 高效沟通
+- 减少认知负担</p>
+<h3 id="2_3">2. 长尾效应</h3>
+<div class="codehilite"><pre><span></span><code>频率 ↑
+    |*
+    | <span class="gs">*</span>
+<span class="gs">    |  *</span>
+    |   ********* ← &quot;长尾&quot;（大量低频词）
+    |___________________→ 排名
+</code></pre></div>
+
+<p><strong>影响：</strong>
+- 搜索引擎需要索引大量低频词
+- 机器学习需要处理稀有词</p>
+<h3 id="3_2">3. 幂律的普遍性</h3>
+<p><strong>其他符合Zipf定律的现象：</strong>
+- 城市人口：纽约人口 ≈ 2×洛杉矶人口
+- 公司规模：最大公司 ≈ 2×第二大公司
+- 网站流量：Google访问量 ≫ 其他网站</p>
+<p><strong>共同特征：</strong>
+- "富者愈富"
+- 马太效应
+- 幂律分布</p>
+<hr />
+<h2 id="_18">十、纸笔考试重点</h2>
+<h3 id="_19">必须掌握</h3>
+<ol>
+<li>✅ <strong>Zipf定律的定义</strong></li>
+<li>频率 ∝ 1/排名</li>
+<li>
+<p>第N名频率 ≈ 第1名频率 / N</p>
+</li>
+<li>
+<p>✅ <strong>log-log图的意义</strong></p>
+</li>
+<li>为什么取对数</li>
+<li>为什么是直线</li>
+<li>
+<p>斜率应该是多少</p>
+</li>
+<li>
+<p>✅ <strong>累积频率的计算</strong></p>
+</li>
+<li>前N个词的频率总和</li>
+<li>
+<p>代码实现方式</p>
+</li>
+<li>
+<p>✅ <strong>词频统计</strong></p>
+</li>
+<li>用字典存储</li>
+<li>排序方法</li>
+<li>TYPES vs TOKENS</li>
+</ol>
+<h3 id="_20">可能的考题</h3>
+<h4 id="1_4">题型1：计算验证</h4>
+<p><strong>题目：</strong>给定词频数据，判断是否符合Zipf定律</p>
+<div class="codehilite"><pre><span></span><code>排名  单词   频率
+1     the    1000
+2     of     500
+3     and    333
+4     a      250
+</code></pre></div>
+
+<p><strong>问：</strong>是否符合Zipf定律？</p>
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>检验：频率 ≈ 1000 / 排名
+
+排名1: 1000 / 1 = 1000 ✅
+排名2: 1000 / 2 = 500 ✅
+排名3: 1000 / 3 = 333 ✅
+排名4: 1000 / 4 = 250 ✅
+
+结论：符合Zipf定律（C=1000）
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="2_4">题型2：累积频率计算</h4>
+<p><strong>题目：</strong></p>
+<div class="codehilite"><pre><span></span><code>频率列表：[100, 50, 30, 20, 10]
+
+计算累积频率列表
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="n">cumulative</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="c1"># i=0:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># 50+100=150</span>
+
+<span class="c1"># i=1:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># 30+150=180</span>
+
+<span class="c1"># i=2:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># 20+180=200</span>
+
+<span class="c1"># i=3:</span>
+<span class="n">cumulative</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># 10+200=210</span>
+
+<span class="n">结果</span><span class="err">：</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">210</span><span class="p">]</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="3log">题型3：log变换</h4>
+<p><strong>题目：</strong>为什么Zipf定律在log-log图上是直线？</p>
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>Zipf定律：freq = C / rank
+
+两边取对数：
+log(freq) = log(C/rank)
+          = log(C) - log(rank)
+
+设 y=log(freq), x=log(rank)：
+y = -x + log(C)
+
+这是直线方程 y=mx+b，其中：
+- 斜率 m = -1
+- 截距 b = log(C)
+
+所以log-log图是斜率为-1的直线。
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h2 id="python">十一、Python绘图基础</h2>
+<h3 id="_21">基本绘图</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
+
+<span class="c1"># 数据</span>
+<span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="c1"># 绘图</span>
+<span class="n">p</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>          <span class="c1"># 创建新图</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>        <span class="c1"># 画点和线</span>
+<span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;My Plot&#39;</span><span class="p">)</span>  <span class="c1"># 标题</span>
+<span class="n">p</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;X轴&#39;</span><span class="p">)</span>     <span class="c1"># X轴标签</span>
+<span class="n">p</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Y轴&#39;</span><span class="p">)</span>     <span class="c1"># Y轴标签</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>            <span class="c1"># 显示</span>
+</code></pre></div>
+
+<h3 id="_22">多个图表</h3>
+<p><strong>方法1：多个窗口</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">p</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>  <span class="c1"># 图1</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y1</span><span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>  <span class="c1"># 图2（新窗口）</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y2</span><span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>方法2：子图</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">p</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>  <span class="c1"># 2行1列，第1个</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y1</span><span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">212</span><span class="p">)</span>  <span class="c1"># 2行1列，第2个</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y2</span><span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="_23">格式控制</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;ro-&#39;</span><span class="p">)</span>
+<span class="c1"># &#39;r&#39; = red（红色）</span>
+<span class="c1"># &#39;o&#39; = circle（圆圈标记）</span>
+<span class="c1"># &#39;-&#39; = solid line（实线）</span>
+
+<span class="n">其他选项</span><span class="err">：</span>
+<span class="s1">&#39;b&#39;</span> <span class="o">=</span> <span class="n">blue</span>
+<span class="s1">&#39;g&#39;</span> <span class="o">=</span> <span class="n">green</span>
+<span class="s1">&#39;*&#39;</span> <span class="o">=</span> <span class="n">asterisk</span>
+<span class="s1">&#39;x&#39;</span> <span class="o">=</span> <span class="n">cross</span>
+<span class="s1">&#39;--&#39;</span> <span class="o">=</span> <span class="n">dashed</span> <span class="n">line</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_24">十二、记忆口诀</h2>
+<h3 id="zipf_4">Zipf定律</h3>
+<div class="codehilite"><pre><span></span><code>频率反比排名，
+第一最多常见，
+第二减半出现，
+第N除以N倍。
+</code></pre></div>
+
+<h3 id="log-log_1">log-log图</h3>
+<div class="codehilite"><pre><span></span><code>取对数变直线，
+斜率负一验证，
+偏离说明误差，
+大体符合定律。
+</code></pre></div>
+
+<h3 id="_25">累积计算</h3>
+<div class="codehilite"><pre><span></span><code>从前往后加，
+每项加前项，
+总和在增长，
+最后是总数。
+</code></pre></div>
+
+<hr />
+<h2 id="_26">十三、常见错误</h2>
+<h3 id="1typestokens">❌ 错误1：混淆TYPES和TOKENS</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误理解</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;the cat the dog&quot;</span>
+<span class="n">TYPES</span> <span class="o">=</span> <span class="mi">4</span>  <span class="err">❌</span>  <span class="c1"># 错！有重复</span>
+
+<span class="c1"># 正确理解</span>
+<span class="n">TYPES</span> <span class="o">=</span> <span class="mi">3</span>  <span class="err">✅</span>  <span class="c1"># 不同的词：the, cat, dog</span>
+<span class="n">TOKENS</span> <span class="o">=</span> <span class="mi">4</span> <span class="err">✅</span>  <span class="c1"># 总共4个词</span>
+</code></pre></div>
+
+<h3 id="20">❌ 错误2：排名从0开始</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">ranks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span>  <span class="err">❌</span>
+<span class="c1"># 排名应该从1开始！</span>
+
+<span class="c1"># 正确</span>
+<span class="n">ranks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>  <span class="err">✅</span>
+</code></pre></div>
+
+<h3 id="3_3">❌ 错误3：累积计算方向错误</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误：从后往前加</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cumulative</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="err">❌</span>
+
+<span class="c1"># 正确：从前往后加</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cumulative</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cumulative</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="err">✅</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_27">十四、扩展思考</h2>
+<h3 id="1zipf">问题1：为什么会有Zipf定律？</h3>
+<p><strong>可能的解释：</strong></p>
+<ol>
+<li><strong>最小努力原则</strong></li>
+<li>人们倾向用最少的词表达最多的意思</li>
+<li>
+<p>常用词复用率高</p>
+</li>
+<li>
+<p><strong>优先连接模型</strong></p>
+</li>
+<li>新文本倾向使用已有的常用词</li>
+<li>
+<p>"富者愈富"效应</p>
+</li>
+<li>
+<p><strong>信息论角度</strong></p>
+</li>
+<li>平衡表达效率和理解成本</li>
+<li>最优编码策略</li>
+</ol>
+<h3 id="2zipf">问题2：哪些情况不符合Zipf定律？</h3>
+<p><strong>特殊文本：</strong>
+- 诗歌（刻意用罕见词）
+- 技术文档（大量专业术语）
+- 随机生成的文本</p>
+<hr />
+<p><strong>祝你考试顺利！</strong> 🎉</p>
+<p>记住：
+- Zipf定律：频率 ∝ 1/排名
+- log-log图是验证工具
+- 累积频率看覆盖率
+- 理解比记公式重要！</p></body>
+</html>
