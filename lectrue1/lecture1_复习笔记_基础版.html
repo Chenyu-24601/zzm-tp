@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 1 复习笔记 - 超级基础版</title>
+    <style>
+        /* 通用样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+                         "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+            line-height: 1.8;
+            color: #2c3e50;
+            background: #fff;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* 标题样式 */
+        h1 {
+            color: #1a1a1a;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 40px 0 20px 0;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #3498db;
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 35px 0 15px 0;
+            padding-left: 15px;
+            border-left: 5px solid #3498db;
+        }
+
+        h3 {
+            color: #34495e;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 25px 0 12px 0;
+        }
+
+        h4 {
+            color: #555;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+        }
+
+        /* 段落 */
+        p {
+            margin: 12px 0;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        /* 强调 */
+        strong {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+
+        em {
+            color: #16a085;
+            font-style: italic;
+        }
+
+        /* 代码样式 */
+        code {
+            background: #f5f5f5;
+            color: #c7254e;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+            font-size: 14px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            border-left: 4px solid #3498db;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        pre code {
+            background: transparent;
+            color: #24292e;
+            padding: 0;
+            font-size: 13px;
+            display: block;
+        }
+
+        /* 列表 */
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 8px 0;
+            line-height: 1.8;
+        }
+
+        /* 引用 */
+        blockquote {
+            background: #fff9e6;
+            border-left: 5px solid #f39c12;
+            padding: 15px 20px;
+            margin: 20px 0;
+            color: #666;
+        }
+
+        /* 表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        table th {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+        }
+
+        table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* 水平线 */
+        hr {
+            border: none;
+            border-top: 2px solid #e1e4e8;
+            margin: 30px 0;
+        }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                padding: 20px;
+                font-size: 12pt;
+            }
+
+            h1 {
+                page-break-before: always;
+                font-size: 24pt;
+            }
+
+            h1:first-of-type {
+                page-break-before: avoid;
+            }
+
+            h2 {
+                page-break-after: avoid;
+                font-size: 18pt;
+            }
+
+            h3 {
+                page-break-after: avoid;
+                font-size: 14pt;
+            }
+
+            pre, table {
+                page-break-inside: avoid;
+            }
+
+            code {
+                font-size: 10pt;
+            }
+
+            pre code {
+                font-size: 9pt;
+            }
+        }
+
+        /* 特殊标记 */
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* 练习题样式 */
+        details {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #2e7d32;
+            padding: 5px;
+        }
+
+        summary:hover {
+            color: #1b5e20;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+        <h1 id="lecture-1-">Lecture 1 超基础复习笔记 - 中文分词</h1>
+<h2 id="_1">零、先理解问题（非常重要！）</h2>
+<h3 id="_2">中文和英文的区别</h3>
+<p><strong>英文句子：</strong></p>
+<div class="codehilite"><pre><span></span><code>I love Python
+</code></pre></div>
+
+<p>单词之间有<strong>空格</strong>，电脑很容易知道有3个词。</p>
+<p><strong>中文句子：</strong></p>
+<div class="codehilite"><pre><span></span><code>我爱编程
+</code></pre></div>
+
+<p><strong>没有空格</strong>！电脑不知道这是1个词还是3个词。</p>
+<h3 id="_3">我们的任务</h3>
+<p>把 <code>我爱编程</code> 变成 <code>我 爱 编程</code>（加空格分开）</p>
+<hr />
+<h2 id="_4">一、算法的基本思路（用人话说）</h2>
+<p>想象你在读一本中文书，但是所有字都连在一起：</p>
+<div class="codehilite"><pre><span></span><code>今天天气很好我们去公园
+</code></pre></div>
+
+<p>你会怎么断句？</p>
+<p><strong>人类的方法：</strong>
+1. 从头开始看
+2. 试着找"最长的词"
+3. 找到了就继续往后看</p>
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>今天天气很好我们去公园
+↓
+&quot;今天天&quot; 不是词 ❌
+&quot;今天&quot; 是词 ✅  → 输出&quot;今天&quot;
+↓
+继续从&quot;天&quot;开始
+&quot;天气很好我&quot; 不是词 ❌
+&quot;天气很好&quot; 不是词 ❌
+&quot;天气很&quot; 不是词 ❌
+&quot;天气&quot; 是词 ✅  → 输出&quot;天气&quot;
+↓
+继续...
+</code></pre></div>
+
+<p>这就是<strong>贪婪匹配算法</strong>！</p>
+<hr />
+<h2 id="_5">二、算法详细步骤（图解）</h2>
+<h3 id="_6">例子：分词 "中文句子"</h3>
+<p><strong>假设词典里有：</strong>
+- 中文（2个字）
+- 句子（2个字）
+- 中（1个字）
+- 文（1个字）
+- 句（1个字）
+- 子（1个字）</p>
+<p><strong>最大词长 = 5</strong>（大部分中文词不超过5个字）</p>
+<h3 id="1">第1步：从开头"中"开始</h3>
+<div class="codehilite"><pre><span></span><code>位置：  0  1  2  3
+句子：  中 文 句 子
+        ↑
+     从这里开始
+</code></pre></div>
+
+<p><strong>尝试匹配：</strong></p>
+<div class="codehilite"><pre><span></span><code>尝试5个字：中文句子？ → 只剩4个字，最多试4个
+尝试4个字：中文句子 → 词典里没有 ❌
+尝试3个字：中文句 → 词典里没有 ❌
+尝试2个字：中文 → 词典里有！✅
+</code></pre></div>
+
+<p><strong>结果：</strong>输出"中文"，位置跳到索引2</p>
+<h3 id="2">第2步：从"句"开始</h3>
+<div class="codehilite"><pre><span></span><code>位置：  0  1  2  3
+句子：  中 文 句 子
+              ↑
+          从这里开始
+</code></pre></div>
+
+<p><strong>尝试匹配：</strong></p>
+<div class="codehilite"><pre><span></span><code>剩余2个字，最多试2个
+尝试2个字：句子 → 词典里有！✅
+</code></pre></div>
+
+<p><strong>结果：</strong>输出"句子"，位置跳到索引4，结束！</p>
+<p><strong>最终输出：</strong><code>中文 句子</code></p>
+<hr />
+<h2 id="_7">三、代码超详细讲解（一行一行解释）</h2>
+<h3 id="_8">先看整体结构</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">segment1</span><span class="p">(</span><span class="n">sentence</span><span class="p">,</span> <span class="n">wordset</span><span class="p">):</span>  <span class="c1"># 函数名：segment1，输入是句子和词典</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[]</span>                     <span class="c1"># 创建一个空列表，用来存放分好的词</span>
+    <span class="n">sentlen</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>        <span class="c1"># 句子有多少个字？例如&quot;中文句子&quot;是4</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>                    <span class="c1"># 当前处理到第几个字？从0开始</span>
+
+    <span class="k">while</span> <span class="n">current</span> <span class="o">&lt;</span> <span class="n">sentlen</span><span class="p">:</span>       <span class="c1"># 只要还没处理完整个句子</span>
+        <span class="c1"># ... 在这里做分词</span>
+
+    <span class="k">return</span> <span class="n">words</span>                   <span class="c1"># 返回分好的词列表</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_9">第一部分：计算能尝试的最大长度</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">maxlen</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">sentlen</span> <span class="o">-</span> <span class="n">current</span><span class="p">,</span> <span class="n">MAXWORDLEN</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<p><code>MAXWORDLEN = 5</code> （这是常量，在文件开头定义的）</p>
+<p>假设：
+- 句子总长 <code>sentlen = 10</code>
+- 当前位置 <code>current = 2</code>
+- 剩余字符 = 10 - 2 = 8个字</p>
+<p>那么 <code>maxlen = min(8, 5) = 5</code></p>
+<p><strong>为什么要用 <code>min</code>？</strong></p>
+<p><strong>情况1：中间位置</strong></p>
+<div class="codehilite"><pre><span></span><code>句子：一二三四五六七八九十
+位置：0 1 2 3 4 5 6 7 8 9
+          ↑ current=2
+剩余：8个字
+→ min(8, 5) = 5，可以试5个字长度
+</code></pre></div>
+
+<p><strong>情况2：快到结尾</strong></p>
+<div class="codehilite"><pre><span></span><code>句子：一二三四五六七八九十
+位置：0 1 2 3 4 5 6 7 8 9
+                    ↑ current=7
+剩余：3个字
+→ min(3, 5) = 3，只能试3个字长度
+</code></pre></div>
+
+<p><strong>如果不用min会怎样？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">7</span><span class="p">:</span><span class="mi">7</span><span class="o">+</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># 想要取5个字</span>
+<span class="c1"># 但只剩3个字！会越界出错</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_10">第二部分：从长到短尝试匹配</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxlen</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</code></pre></div>
+
+<p><strong><code>range(maxlen, 0, -1)</code> 是什么意思？</strong></p>
+<p>假设 <code>maxlen = 5</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="err">→</span>  <span class="n">生成</span><span class="err">：</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span>
+</code></pre></div>
+
+<ul>
+<li>第1个参数（5）：从哪里开始</li>
+<li>第2个参数（0）：到哪里结束（不包括0）</li>
+<li>第3个参数（-1）：每次减1（倒着数）</li>
+</ul>
+<p><strong>为什么要倒着数？</strong></p>
+<p>因为我们要<strong>先试最长的词</strong>！</p>
+<div class="codehilite"><pre><span></span><code>先试5个字：中文句子由
+再试4个字：中文句子
+再试3个字：中文句
+再试2个字：中文  ✅ 找到了！
+（不用再试1个字了）
+</code></pre></div>
+
+<hr />
+<h3 id="_11">第三部分：提取候选词</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="n">current</span><span class="p">:</span><span class="n">current</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+</code></pre></div>
+
+<p><strong>字符串切片详解：</strong></p>
+<p><code>sentence[起始位置:结束位置]</code></p>
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">sentence</span> <span class="o">=</span> <span class="s2">&quot;中文句子&quot;</span>
+<span class="c1"># 索引：    0 1 2 3</span>
+
+<span class="n">sentence</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>  <span class="err">→</span>  <span class="s2">&quot;中文&quot;</span>   <span class="c1"># 从索引0到2（不包括2）</span>
+<span class="n">sentence</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>  <span class="err">→</span>  <span class="s2">&quot;文句&quot;</span>   <span class="c1"># 从索引1到3（不包括3）</span>
+<span class="n">sentence</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>  <span class="err">→</span>  <span class="s2">&quot;句子&quot;</span>   <span class="c1"># 从索引2到4（不包括4）</span>
+</code></pre></div>
+
+<p><strong>在循环中：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">current</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;中文&quot;</span>
+
+<span class="n">current</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;句子&quot;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_12">第四部分：核心判断（最重要！）</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">wordset</span><span class="p">:</span>
+    <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="n">current</span> <span class="o">+=</span> <span class="n">i</span>
+    <span class="k">break</span>
+</code></pre></div>
+
+<p><strong>逐句解释：</strong></p>
+<h4 id="if-i-1-or-candidate-in-wordset"><code>if i == 1 or candidate in wordset:</code></h4>
+<p>这是<strong>两个条件</strong>，满足<strong>任意一个</strong>就执行：</p>
+<p><strong>条件1：<code>i == 1</code></strong>
+- 意思：已经试到只剩1个字了
+- 为什么要这个条件？</p>
+<p><strong>想象这个情况：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">句子</span><span class="err">：</span><span class="n">我爱</span><span class="err">♥</span><span class="n">编程</span>  <span class="c1"># ♥是个奇怪符号，不在词典里</span>
+<span class="n">词典</span><span class="err">：</span><span class="n">我</span><span class="p">,</span> <span class="n">爱</span><span class="p">,</span> <span class="n">编程</span>
+
+<span class="n">处理到</span><span class="err">♥</span><span class="n">时</span><span class="err">：</span>
+<span class="n">试5个字</span><span class="err">：</span><span class="n">不在词典</span>
+<span class="n">试4个字</span><span class="err">：</span><span class="n">不在词典</span>
+<span class="n">试3个字</span><span class="err">：</span><span class="n">不在词典</span>
+<span class="n">试2个字</span><span class="err">：</span><span class="n">不在词典</span>
+<span class="n">试1个字</span><span class="err">：</span><span class="n">还是不在词典</span><span class="err">！</span><span class="n">但我们必须处理它</span><span class="err">！</span>
+</code></pre></div>
+
+<p>如果没有 <code>i == 1</code> 这个条件：
+- 程序会一直卡在♥这里，永远循环下去！</p>
+<p>有了 <code>i == 1</code> 这个条件：
+- 即使不在词典，单个字也强制接受，继续往下走</p>
+<p><strong>条件2：<code>candidate in wordset</code></strong>
+- 意思：候选词在词典里找到了
+- <code>in</code> 是Python的关键字，检查某个东西是否在集合/列表里</p>
+<div class="codehilite"><pre><span></span><code><span class="n">wordset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;中文&quot;</span><span class="p">,</span> <span class="s2">&quot;句子&quot;</span><span class="p">,</span> <span class="s2">&quot;我&quot;</span><span class="p">}</span>
+<span class="s2">&quot;中文&quot;</span> <span class="ow">in</span> <span class="n">wordset</span>  <span class="err">→</span>  <span class="kc">True</span>  <span class="err">✅</span>
+<span class="s2">&quot;中文句&quot;</span> <span class="ow">in</span> <span class="n">wordset</span>  <span class="err">→</span>  <span class="kc">False</span>  <span class="err">❌</span>
+</code></pre></div>
+
+<h4 id="wordsappendcandidate"><code>words.append(candidate)</code></h4>
+<p>把找到的词<strong>添加</strong>到结果列表里：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">words</span> <span class="o">=</span> <span class="p">[]</span>                  <span class="c1"># 一开始是空的</span>
+<span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;中文&quot;</span><span class="p">)</span>        <span class="c1"># → words = [&quot;中文&quot;]</span>
+<span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;句子&quot;</span><span class="p">)</span>        <span class="c1"># → words = [&quot;中文&quot;, &quot;句子&quot;]</span>
+</code></pre></div>
+
+<h4 id="current-i"><code>current += i</code></h4>
+<p>把位置向前移动 <code>i</code> 个字符：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># 找到了2个字的词&quot;中文&quot;</span>
+<span class="n">current</span> <span class="o">+=</span> <span class="n">i</span>  <span class="c1"># 等同于 current = current + i = 0 + 2 = 2</span>
+</code></pre></div>
+
+<p><strong>图解：</strong></p>
+<div class="codehilite"><pre><span></span><code>位置： 0  1  2  3
+句子： 中 文 句 子
+       ↑
+   current=0，找到&quot;中文&quot;（2个字）
+
+移动后：
+位置： 0  1  2  3
+句子： 中 文 句 子
+             ↑
+         current=2
+</code></pre></div>
+
+<h4 id="break"><code>break</code></h4>
+<p><strong>跳出当前的for循环</strong>，不再尝试更短的长度。</p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># 5, 4, 3, 2, 1</span>
+    <span class="k">if</span> <span class="n">找到了</span><span class="p">:</span>
+        <span class="k">break</span>  <span class="c1"># 立即退出for循环，不再试4, 3, 2, 1</span>
+</code></pre></div>
+
+<p><strong>为什么要break？</strong></p>
+<p>因为我们已经找到词了，不需要再试更短的了！</p>
+<div class="codehilite"><pre><span></span><code>试<span class="mi">5</span>个字：中文句子由<span class="w"> </span>❌
+试<span class="mi">4</span>个字：中文句子<span class="w"> </span>❌
+试<span class="mi">3</span>个字：中文句<span class="w"> </span>❌
+试<span class="mi">2</span>个字：中文<span class="w"> </span>✅<span class="w"> </span>找到了！<span class="k">break</span>！
+（不需要再试<span class="mi">1</span>个字<span class="s2">&quot;中&quot;</span>了）
+</code></pre></div>
+
+<hr />
+<h2 id="_13">四、完整执行过程示例</h2>
+<h3 id="_14">分词句子："我爱你"</h3>
+<p><strong>词典：</strong><code>{"我", "爱", "你", "我爱"}</code></p>
+<p><strong>执行流程：</strong></p>
+<h3 id="1_1">轮次1：</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="s2">&quot;我爱你&quot;</span>
+<span class="n">sentlen</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">maxlen</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># 剩3个字，最多试3个</span>
+
+<span class="c1"># for i in range(3, 0, -1):  → 3, 2, 1</span>
+
+<span class="n">i</span> <span class="o">=</span> <span class="mi">3</span><span class="p">:</span> <span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;我爱你&quot;</span>
+       <span class="s2">&quot;我爱你&quot;</span> <span class="ow">in</span> <span class="n">wordset</span><span class="err">?</span> <span class="err">→</span> <span class="kc">False</span> <span class="err">❌</span>
+
+<span class="n">i</span> <span class="o">=</span> <span class="mi">2</span><span class="p">:</span> <span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;我爱&quot;</span>
+       <span class="s2">&quot;我爱&quot;</span> <span class="ow">in</span> <span class="n">wordset</span><span class="err">?</span> <span class="err">→</span> <span class="kc">True</span> <span class="err">✅</span>
+       <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;我爱&quot;</span><span class="p">)</span> <span class="err">→</span> <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;我爱&quot;</span><span class="p">]</span>
+       <span class="n">current</span> <span class="o">+=</span> <span class="mi">2</span> <span class="err">→</span> <span class="n">current</span> <span class="o">=</span> <span class="mi">2</span>
+       <span class="k">break</span>  <span class="c1"># 退出for循环</span>
+</code></pre></div>
+
+<h3 id="2_1">轮次2：</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">current</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">剩余</span><span class="err">：</span><span class="mi">1</span><span class="n">个字</span>
+
+<span class="n">maxlen</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># for i in range(1, 0, -1):  → 1</span>
+
+<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">:</span> <span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;你&quot;</span>
+       <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="err">→</span> <span class="kc">True</span> <span class="err">✅</span>  <span class="c1"># 即使不检查词典，也接受</span>
+       <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;你&quot;</span><span class="p">)</span> <span class="err">→</span> <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;我爱&quot;</span><span class="p">,</span> <span class="s2">&quot;你&quot;</span><span class="p">]</span>
+       <span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span> <span class="err">→</span> <span class="n">current</span> <span class="o">=</span> <span class="mi">3</span>
+       <span class="k">break</span>
+</code></pre></div>
+
+<h3 id="3">轮次3：</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">current</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">sentlen</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="k">while</span> <span class="n">current</span> <span class="o">&lt;</span> <span class="n">sentlen</span><span class="p">:</span>  <span class="c1"># 3 &lt; 3? → False</span>
+<span class="c1"># 循环结束</span>
+
+<span class="k">return</span> <span class="n">words</span>  <span class="c1"># 返回 [&quot;我爱&quot;, &quot;你&quot;]</span>
+</code></pre></div>
+
+<p><strong>最终输出：</strong><code>["我爱", "你"]</code> → 打印成 <code>我爱 你</code></p>
+<hr />
+<h2 id="set-list">五、为什么用 <code>set</code> 而不是 <code>list</code>？</h2>
+<h3 id="_15">情景对比</h3>
+<p><strong>词典有17,000个词</strong></p>
+<h4 id="list">用 list：</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">wordset</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;中文&quot;</span><span class="p">,</span> <span class="s2">&quot;句子&quot;</span><span class="p">,</span> <span class="s2">&quot;我&quot;</span><span class="p">,</span> <span class="s2">&quot;爱&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">17000</span><span class="n">个词</span><span class="p">]</span>
+
+<span class="s2">&quot;中文&quot;</span> <span class="ow">in</span> <span class="n">wordset</span>
+<span class="c1"># 电脑要做什么？</span>
+<span class="c1"># 从第1个词开始，一个一个检查：</span>
+<span class="c1"># 是&quot;中文&quot;吗？ → 是！找到了</span>
+<span class="c1"># 最坏情况：检查17000次</span>
+</code></pre></div>
+
+<h4 id="set">用 set：</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">wordset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;中文&quot;</span><span class="p">,</span> <span class="s2">&quot;句子&quot;</span><span class="p">,</span> <span class="s2">&quot;我&quot;</span><span class="p">,</span> <span class="s2">&quot;爱&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">17000</span><span class="n">个词</span><span class="p">}</span>
+
+<span class="s2">&quot;中文&quot;</span> <span class="ow">in</span> <span class="n">wordset</span>
+<span class="c1"># 电脑要做什么？</span>
+<span class="c1"># 用数学魔法（哈希表），直接计算位置</span>
+<span class="c1"># 只需要检查1次！</span>
+</code></pre></div>
+
+<h3 id="_16">速度对比</h3>
+<p>假设要分词1000个句子：
+- <strong>用 list</strong>：可能需要1小时
+- <strong>用 set</strong>：只需要1秒</p>
+<p><strong>考试重点：</strong> set 查找速度是 O(1)，list 是 O(n)</p>
+<hr />
+<h2 id="utf-8">六、UTF-8 编码（简单了解）</h2>
+<h3 id="_17">为什么需要编码？</h3>
+<p>电脑只认识 0 和 1（二进制）。</p>
+<p><strong>英文字母 'A'：</strong>
+- 电脑存储：01000001（1个字节）</p>
+<p><strong>中文字 '中'：</strong>
+- 电脑存储：11100100 10111000 10101101（3个字节！）</p>
+<h3 id="_18">代码中的体现</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</code></pre></div>
+
+<p><code>encoding="utf8"</code> 告诉Python：
+- 这个文件里的汉字用了3个字节存储
+- 请正确翻译成汉字给我</p>
+<p><strong>如果不写 <code>encoding="utf8"</code>：</strong>
+- 可能看到乱码：<code>ä¸­æ–‡</code></p>
+<hr />
+<h2 id="segment2">七、segment2 的区别（选读）</h2>
+<p>segment1 和 segment2 做的事情<strong>完全一样</strong>，只是写法不同。</p>
+<h3 id="_19">类比</h3>
+<p><strong>segment1：用书签</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 书签在第0页</span>
+<span class="n">读取</span> <span class="n">sentence</span><span class="p">[</span><span class="n">current</span><span class="p">:</span><span class="n">current</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">current</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># 移动书签到第2页</span>
+</code></pre></div>
+
+<p><strong>segment2：撕纸</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">candidate</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># 看前2个字</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">sentence</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>   <span class="c1"># 把前2个字撕掉</span>
+</code></pre></div>
+
+<p><strong>结果一样，方式不同而已！</strong></p>
+<hr />
+<h2 id="_20">八、纸笔考试怎么答？</h2>
+<h3 id="_21">可能的题目</h3>
+<p><strong>题目：</strong>用贪婪匹配算法分词 "今天很好"</p>
+<p><strong>词典：</strong>今天, 天, 很, 好, 很好</p>
+<p><strong>答题步骤：</strong></p>
+<div class="codehilite"><pre><span></span><code>步骤1：
+位置=0，句子=&quot;今天很好&quot;，剩余4个字
+试4个字：&quot;今天很好&quot; → 不在词典 ❌
+试3个字：&quot;今天很&quot; → 不在词典 ❌
+试2个字：&quot;今天&quot; → 在词典 ✅
+输出：&quot;今天&quot;，位置移到2
+
+步骤2：
+位置=2，句子=&quot;今天很好&quot;，剩余2个字
+试2个字：&quot;很好&quot; → 在词典 ✅
+输出：&quot;很好&quot;，位置移到4
+
+步骤3：
+位置=4，等于句子长度，结束
+
+最终结果：今天 很好
+</code></pre></div>
+
+<h3 id="_22">必背要点</h3>
+<ol>
+<li><strong>算法从左到右处理</strong></li>
+<li><strong>每次先试最长的词（5→4→3→2→1）</strong></li>
+<li><strong>找到词或只剩1个字就接受</strong></li>
+<li><strong>用 set 存词典，查找快</strong></li>
+<li><strong>i == 1 是兜底，防止死循环</strong></li>
+</ol>
+<hr />
+<h2 id="_23">九、记忆口诀</h2>
+<div class="codehilite"><pre><span></span><code>从左到右不回头，  （从头开始处理）
+先长后短慢慢找，  （5→4→3→2→1）
+词典查到就前进，  （找到了就移动位置）
+单字保底不会卡。  （i==1 防止死循环）
+</code></pre></div>
+
+<hr />
+<h2 id="_24">十、常见错误理解（避坑）</h2>
+<h3 id="1_2">❌ 错误1：以为要找"所有可能的分词"</h3>
+<div class="codehilite"><pre><span></span><code>&quot;中文句子&quot; 可能分成：
+- 中文 句子
+- 中 文句 子
+- 中 文 句 子
+
+贪婪算法只找第一种（最长匹配）！
+</code></pre></div>
+
+<h3 id="2-i-1">❌ 错误2：以为 <code>i == 1</code> 可以去掉</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">wordset</span><span class="p">:</span>  <span class="c1"># 只有这一个条件</span>
+</code></pre></div>
+
+<p><strong>问题：</strong> 遇到不在词典的字会死循环！</p>
+<h3 id="3-break">❌ 错误3：不理解为什么用 <code>break</code></h3>
+<p><strong>没有break：</strong></p>
+<div class="codehilite"><pre><span></span><code>找到&quot;中文&quot;（2个字），还会继续试1个字的&quot;中&quot;
+结果：输出了&quot;中文&quot;，又输出&quot;中&quot;，错误！
+</code></pre></div>
+
+<hr />
+<h2 id="_25">十一、手工模拟练习题</h2>
+<h3 id="1_3">练习1</h3>
+<p><strong>句子：</strong> "我爱编程"
+<strong>词典：</strong> 我, 爱, 编程, 编, 程
+<strong>问：</strong> 分词结果是什么？</p>
+<details>
+<summary>点击查看答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>位置0：试4→3→2，&quot;我&quot;(1字) → i==1接受
+输出：我
+
+位置1：试3→2→1，&quot;爱&quot;(1字) → i==1接受
+输出：爱
+
+位置2：试2→1，&quot;编程&quot;(2字) → 在词典✅
+输出：编程
+
+结果：我 爱 编程
+</code></pre></div>
+
+
+</details>
+
+<h3 id="2_2">练习2</h3>
+<p><strong>句子：</strong> "中国人"
+<strong>词典：</strong> 中国, 国人, 中, 人
+<strong>问：</strong> 分词结果是什么？</p>
+<details>
+<summary>点击查看答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>位置0：试3→2，&quot;中国&quot;(2字) → 在词典✅
+输出：中国
+位置2：试1，&quot;人&quot;(1字) → i==1接受
+输出：人
+
+结果：中国 人
+
+注意：不是&quot;中 国人&quot;，因为贪婪选择最长！
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<p><strong>最后叮嘱：</strong>
+- 考试时画图！把位置、候选词都标出来
+- 多练几遍手工模拟，理解每一步
+- 记住"为什么"比记住代码更重要</p>
+<p>祝你考试顺利！🎉</p>
+    </div>
+
+    <script>
+        // 自动打开浏览器打印对话框
+        window.onload = function() {
+            // 给用户一点时间查看页面
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
