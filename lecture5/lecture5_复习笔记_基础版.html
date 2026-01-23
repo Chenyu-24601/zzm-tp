@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 5 复习笔记 - 正则表达式进阶 & 文本预处理</title>
+    <style>
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        h4 {
+            color: #666;
+        }
+        code {
+            background-color: #f8f8f8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Courier New", Consolas, monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin-left: 0;
+            color: #555;
+            background-color: #f9f9f9;
+            padding: 10px 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .example {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .error {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 30px 0;
+        }
+        details {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="lecture-5-">Lecture 5 超基础复习笔记 - 正则表达式进阶 &amp; 文本预处理</h1>
+<h2 id="_1">零、先理解问题</h2>
+<h3 id="lecture-5">Lecture 5分为两部分</h3>
+<p><strong>Part A：正则表达式进阶</strong>
+- 处理HTML标签
+- 提取URL链接
+- 使用反向引用（backreferences）</p>
+<p><strong>Part B：文本预处理</strong>
+- 分词（Tokenization）
+- 小写转换（Lowercasing）
+- Twitter特殊元素处理（@mentions, #hashtags, emojis）
+- 类型-标记比率（Type-Token Ratio, TTR）</p>
+<hr />
+<h2 id="part-ahtml">Part A：正则表达式进阶（HTML解析）</h2>
+<h3 id="_2">一、问题背景</h3>
+<p><strong>任务：</strong>从HTML文件中提取信息</p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>COM6115: Text Processing<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>This is a <span class="p">&lt;</span><span class="nt">b</span><span class="p">&gt;</span>bold<span class="p">&lt;/</span><span class="nt">b</span><span class="p">&gt;</span> word.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;http://example.com&quot;</span><span class="p">&gt;</span>Link<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<p><strong>需要提取：</strong>
+1. HTML标签（如 <code>&lt;p&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;/p&gt;</code>）
+2. 区分开标签和闭标签
+3. 标签参数（如 <code>href="..."</code>）
+4. URL链接
+5. 配对的标签之间的文本</p>
+<hr />
+<h3 id="_3">二、核心概念</h3>
+<h4 id="1-vs">1. 贪婪匹配 vs 非贪婪匹配</h4>
+<p><strong>贪婪匹配（Greedy）：</strong>尽可能多地匹配</p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;&lt;b&gt;text&lt;/b&gt;&lt;/p&gt;&quot;</span>
+
+<span class="c1"># 贪婪匹配</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;.*&gt;&#39;</span>
+<span class="c1"># 匹配结果：&lt;p&gt;&lt;b&gt;text&lt;/b&gt;&lt;/p&gt;  ← 整个字符串！</span>
+</code></pre></div>
+
+<p><strong>为什么？</strong></p>
+<div class="codehilite"><pre><span></span><code>&#39;.*&#39; 表示：匹配任意字符，任意多次
+从第一个 &#39;&lt;&#39; 开始，一直到最后一个 &#39;&gt;&#39;
+</code></pre></div>
+
+<p><strong>问题：</strong>我们想要分别匹配每个标签，而不是一次全匹配！</p>
+<hr />
+<p><strong>非贪婪匹配（Non-greedy）：</strong>尽可能少地匹配</p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;&lt;b&gt;text&lt;/b&gt;&lt;/p&gt;&quot;</span>
+
+<span class="c1"># 非贪婪匹配</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;.*?&gt;&#39;</span>
+<span class="c1"># 匹配结果：&lt;p&gt;, &lt;b&gt;, &lt;/b&gt;, &lt;/p&gt;  ← 4个单独的标签！</span>
+</code></pre></div>
+
+<p><strong><code>?</code> 的作用：</strong></p>
+<div class="codehilite"><pre><span></span><code>&#39;.*?&#39; 表示：匹配任意字符，但尽可能少
+遇到第一个 &#39;&gt;&#39; 就停止
+</code></pre></div>
+
+<hr />
+<h4 id="2">2. 字符类取反 <code>[^...]</code></h4>
+<p><strong>含义：</strong>匹配<strong>不在</strong>括号内的任意字符</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 例子1：匹配非数字</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;[^0-9]&#39;</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;a1b2c3&quot;</span>
+<span class="c1"># 匹配：a, b, c（不匹配数字）</span>
+
+<span class="c1"># 例子2：匹配HTML标签（不包含&gt;）</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;[^&gt;]+&gt;&#39;</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;&lt;b&gt;text&lt;/b&gt;&lt;/p&gt;&quot;</span>
+<span class="c1"># 匹配：&lt;p&gt;, &lt;b&gt;, &lt;/b&gt;, &lt;/p&gt;</span>
+</code></pre></div>
+
+<p><strong>为什么有效？</strong></p>
+<div class="codehilite"><pre><span></span><code>&#39;&lt;[^&gt;]+&gt;&#39; 的意思：
+&lt; ← 以 &lt; 开始
+[^&gt;]+ ← 匹配1个或多个&quot;不是&gt;&quot;的字符
+&gt; ← 以 &gt; 结束
+
+这样就不会跨越多个标签！
+</code></pre></div>
+
+<hr />
+<h4 id="3-backreferences">3. 反向引用（Backreferences）</h4>
+<p><strong>问题：</strong>如何匹配配对的标签？</p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">b</span><span class="p">&gt;</span>bold text<span class="p">&lt;/</span><span class="nt">b</span><span class="p">&gt;</span>  ← 正确配对
+<span class="p">&lt;</span><span class="nt">b</span><span class="p">&gt;</span>bold text<span class="p">&lt;/</span><span class="nt">i</span><span class="p">&gt;</span>  ← 错误配对！
+</code></pre></div>
+
+<p><strong>反向引用语法：</strong><code>\1</code>, <code>\2</code>, <code>\3</code>...</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 匹配配对的开闭标签</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;(\w+)&gt;(.*?)&lt;/\1&gt;&#39;</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>r&#39;<span class="err">&lt;</span>(\w+)&gt;(.*?)<span class="err">&lt;</span>/\1&gt;&#39;
+<span class="w">   </span>↑<span class="w">      </span>↑<span class="w">     </span>↑
+<span class="w">   </span>|<span class="w">      </span>|<span class="w">     </span>└─<span class="w"> </span>反向引用第1组（必须匹配相同的标签名）
+<span class="w">   </span>|<span class="w">      </span>└─<span class="w"> </span>第2组：标签之间的文本（非贪婪）
+<span class="w">   </span>└─<span class="w"> </span>第1组：标签名（用括号捕获）
+
+例子：
+<span class="nt">&lt;b&gt;</span>text<span class="nt">&lt;/b&gt;</span>
+第1组匹配：b
+第2组匹配：text
+\1<span class="w"> </span>要求：也必须是<span class="w"> </span>b（所以<span class="w"> </span><span class="nt">&lt;/b&gt;</span><span class="w"> </span>才匹配）
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt;&quot;</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;(\w+)&gt;(.*?)&lt;/\1&gt;&#39;</span>
+
+<span class="n">matches</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;标签: </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">, 内容: </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># 标签: b, 内容: bold</span>
+<span class="c1"># 标签: i, 内容: italic</span>
+</code></pre></div>
+
+<p><strong>为什么要用 <code>r'...'</code> （raw string）？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误：不用 r</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;(\w+)&gt;(.*?)&lt;/</span><span class="se">\1</span><span class="s1">&gt;&#39;</span>
+<span class="c1"># Python会把 \1 理解为转义字符（报错！）</span>
+
+<span class="c1"># 正确：用 r</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;(\w+)&gt;(.*?)&lt;/\1&gt;&#39;</span>
+<span class="c1"># Python保留 \1 作为正则表达式的反向引用</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_4">三、解决方案详解</h3>
+<h4 id="1html">任务1：匹配HTML标签</h4>
+<p><strong>方案1：非贪婪匹配</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;&lt;/?(.*?)&gt;&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="err">&lt;</span>/?(.*?)&gt;
+↑<span class="w">  </span>↑<span class="w">   </span>↑
+|<span class="w">  </span>|<span class="w">   </span>└─<span class="w"> </span>右尖括号
+|<span class="w">  </span>└─<span class="w"> </span>第1组：标签名（非贪婪）
+└─<span class="w"> </span>可选的斜杠（闭标签用）
+
+例子：
+<span class="nt">&lt;p&gt;</span><span class="w">     </span>→<span class="w"> </span>匹配，group(1)=&#39;p&#39;
+<span class="nt">&lt;/p&gt;</span><span class="w">    </span>→<span class="w"> </span>匹配，group(1)=&#39;p&#39;
+<span class="nt">&lt;title&gt;</span><span class="w"> </span>→<span class="w"> </span>匹配，group(1)=&#39;title&#39;
+</code></pre></div>
+
+<p><strong>问题：</strong>这个方案会把参数也包括进去！</p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;...&quot;</span><span class="p">&gt;</span> → group(1) = &#39;a href=&quot;...&quot;&#39;  ← 不好！
+</code></pre></div>
+
+<hr />
+<p><strong>方案2：字符类取反</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;&lt;/?([^&gt;]+)&gt;&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>&lt;/?([^&gt;]+)&gt;
+   ↑    ↑
+   |    └─ 1个或多个&quot;非&gt;&quot;字符
+   └─ 第1组
+
+例子：
+&lt;p&gt;            → group(1) = &#39;p&#39;
+&lt;a href=&quot;...&quot;&gt; → group(1) = &#39;a href=&quot;...&quot;&#39;
+</code></pre></div>
+
+<p><strong>还是有问题：</strong>参数还在里面！</p>
+<hr />
+<p><strong>方案3：分离标签名和参数（最佳）</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;/?(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>r&#39;&lt;/?(\w+\b)([^&gt;]+)?&gt;&#39;
+    ↑    ↑  ↑     ↑
+    |    |  |     └─ 第2组：参数部分（可选）
+    |    |  └─ 1个或多个&quot;非&gt;&quot;字符
+    |    └─ 单词边界（确保标签名完整）
+    └─ 第1组：标签名
+
+\w+ ← 1个或多个单词字符（标签名）
+\b  ← 单词边界（Word Boundary）
+</code></pre></div>
+
+<p><strong><code>\b</code> 的作用（重要！）：</strong></p>
+<div class="codehilite"><pre><span></span><code>\b = 单词边界（Word Boundary）
+
+位置标记，出现在：
+- 单词字符(\w)和非单词字符之间
+- 字符串开头/结尾
+
+例子：
+&quot;&lt;table border=1&gt;&quot;
+  ↑    ↑
+  table 后面是空格
+  空格不是\w，所以这里是\b
+
+\w+\b 确保只匹配 &quot;table&quot;，不包括后面的空格和参数
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;/?(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+
+<span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;table border=1 cellspacing=0&gt;&#39;</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">tag</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># &#39;table&#39;  ← 标签名</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>  <span class="c1"># &#39; border=1 cellspacing=0&#39;  ← 参数</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2_1">任务2：区分开标签和闭标签</h4>
+<p><strong>开标签：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">openTag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>闭标签：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">closeTag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;/(\w+\b)\s*&gt;&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>区别：</strong></p>
+<div class="codehilite"><pre><span></span><code>开标签：<span class="err">&lt;</span>(\w+\b)([^&gt;]+)?&gt;
+<span class="w">        </span>↑
+<span class="w">        </span>没有斜杠要求，可选的参数
+
+闭标签：<span class="err">&lt;</span>/(\w+\b)\s*&gt;
+<span class="w">         </span>↑<span class="w">       </span>↑
+<span class="w">         </span>必须有斜杠<span class="w">  </span>可选的空格（有些HTML会写成<span class="w"> </span><span class="nt">&lt;/p  &gt;</span>）
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">openTag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+<span class="n">closeTag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;/(\w+\b)\s*&gt;&#39;</span><span class="p">)</span>
+
+<span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;p&gt;This is &lt;b&gt;bold&lt;/b&gt; text.&lt;/p&gt;&#39;</span>
+
+<span class="c1"># 查找开标签</span>
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">openTag</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">html</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;OPENTAG:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>  <span class="c1"># 如果有参数</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  PARAMS:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="c1"># 查找闭标签</span>
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">closeTag</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">html</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;CLOSETAG:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># OPENTAG: p</span>
+<span class="c1"># OPENTAG: b</span>
+<span class="c1"># CLOSETAG: b</span>
+<span class="c1"># CLOSETAG: p</span>
+</code></pre></div>
+
+<hr />
+<h4 id="3">任务3：提取标签参数</h4>
+<p><strong>参数格式：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">table</span> <span class="na">border</span><span class="o">=</span><span class="s">1</span> <span class="na">cellspacing</span><span class="o">=</span><span class="s">0</span> <span class="na">cellpadding</span><span class="o">=</span><span class="s">8</span><span class="p">&gt;</span>
+       ↑       ↑           ↑
+       参数1    参数2        参数3
+</code></pre></div>
+
+<p><strong>解决方案：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">openTag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+
+<span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;table border=1 cellspacing=0 cellpadding=8&gt;&#39;</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">openTag</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>  <span class="c1"># 如果有参数</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>  <span class="c1"># 按空格分割</span>
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;PARAM:&#39;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># PARAM: border=1</span>
+<span class="c1"># PARAM: cellspacing=0</span>
+<span class="c1"># PARAM: cellpadding=8</span>
+</code></pre></div>
+
+<p><strong>为什么用 <code>.split()</code>？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># m.group(2) = &#39; border=1 cellspacing=0 cellpadding=8&#39;</span>
+<span class="c1">#               ↑ 开头有空格</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="c1"># .split() 默认按空格分割，并自动去除首尾空格</span>
+<span class="c1"># 结果：[&#39;border=1&#39;, &#39;cellspacing=0&#39;, &#39;cellpadding=8&#39;]</span>
+</code></pre></div>
+
+<hr />
+<h4 id="4">任务4：匹配配对的开闭标签</h4>
+<p><strong>使用反向引用：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">openCloseTagPair</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;(\w+\b)([^&gt;]+)?&gt;(.*?)&lt;/\1\s*&gt;&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>r&#39;<span class="err">&lt;</span>(\w+\b)([^&gt;]+)?&gt;(.*?)<span class="err">&lt;</span>/\1\s*&gt;&#39;
+<span class="w">   </span>↑<span class="w">      </span>↑<span class="w">        </span>↑<span class="w">     </span>↑
+<span class="w">   </span>|<span class="w">      </span>|<span class="w">        </span>|<span class="w">     </span>└─<span class="w"> </span>反向引用第1组（闭标签必须同名）
+<span class="w">   </span>|<span class="w">      </span>|<span class="w">        </span>└─<span class="w"> </span>第3组：标签之间的内容（非贪婪）
+<span class="w">   </span>|<span class="w">      </span>└─<span class="w"> </span>第2组：开标签的参数（可选）
+<span class="w">   </span>└─<span class="w"> </span>第1组：开标签名
+
+例子：
+<span class="nt">&lt;b&gt;</span>bold<span class="w"> </span>text<span class="nt">&lt;/b&gt;</span>
+第1组：b
+第2组：None（没有参数）
+第3组：bold<span class="w"> </span>text
+\1：必须是<span class="w"> </span>b
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;(\w+\b)([^&gt;]+)?&gt;(.*?)&lt;/\1\s*&gt;&#39;</span>
+<span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;p&gt;This is &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text.&lt;/p&gt;&#39;</span>
+
+<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">html</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PAIR [</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">]: </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># PAIR [b]: &quot;bold&quot;</span>
+<span class="c1"># PAIR [i]: &quot;italic&quot;</span>
+<span class="c1"># PAIR [p]: &quot;This is &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text.&quot;</span>
+</code></pre></div>
+
+<p><strong>为什么要非贪婪 <code>.*?</code>？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;b&gt;first&lt;/b&gt; text &lt;b&gt;second&lt;/b&gt;&#39;</span>
+
+<span class="c1"># 贪婪匹配 .*</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;(\w+)&gt;(.*)&lt;/\1&gt;&#39;</span>
+<span class="c1"># 匹配：&lt;b&gt;first&lt;/b&gt; text &lt;b&gt;second&lt;/b&gt;  ← 错误！跨越了两个标签</span>
+
+<span class="c1"># 非贪婪匹配 .*?</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;(\w+)&gt;(.*?)&lt;/\1&gt;&#39;</span>
+<span class="c1"># 匹配：&lt;b&gt;first&lt;/b&gt; 和 &lt;b&gt;second&lt;/b&gt;  ← 正确！</span>
+</code></pre></div>
+
+<hr />
+<h4 id="5url">任务5：提取URL</h4>
+<p><strong>HTML中的链接格式：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;http://example.com&quot;</span><span class="p">&gt;</span>链接文本<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">http://example.com</span><span class="p">&gt;</span>链接文本<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>  ← 也可以不用引号
+</code></pre></div>
+
+<p><strong>方案1：带引号的URL</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;href=(&quot;[^&quot;&gt;]+&quot;)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>href=(&quot;[^&quot;&gt;]+&quot;)
+      ↑    ↑
+      |    └─ 右引号
+      └─ 左引号 + 1个或多个&quot;非引号且非&gt;&quot;的字符
+
+[^&quot;&gt;]+ ← 既不是引号&quot;，也不是尖括号&gt;
+
+re.I ← 忽略大小写（HREF, Href, href都能匹配）
+</code></pre></div>
+
+<hr />
+<p><strong>方案2：不带引号的URL</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;href=([^&quot;&gt;\s]+)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>href=([^&quot;&gt;\s]+)
+      ↑
+      1个或多个&quot;非引号、非&gt;、非空格&quot;的字符
+
+[^&quot;&gt;\s]+ ← 不是引号，不是&gt;，不是空格
+</code></pre></div>
+
+<hr />
+<p><strong>方案3：两种情况都支持（最佳）</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;href=(&quot;[^&quot;&gt;]+&quot;|[^&quot;&gt;\s]+)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>r&#39;href=(&quot;[^&quot;&gt;]+&quot;|[^&quot;&gt;\s]+)&#39;
+        ↑         ↑
+        |         └─ 或：无引号的URL
+        └─ 带引号的URL
+
+竖线 | 表示&quot;或&quot;
+左边：带引号的格式  &quot;[^&quot;&gt;]+&quot;
+右边：无引号的格式  [^&quot;&gt;\s]+
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;href=(&quot;[^&quot;&gt;]+&quot;|[^&quot;&gt;\s]+)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+
+<span class="n">html1</span> <span class="o">=</span> <span class="s1">&#39;&lt;a href=&quot;http://example.com&quot;&gt;Link&lt;/a&gt;&#39;</span>
+<span class="n">html2</span> <span class="o">=</span> <span class="s1">&#39;&lt;a HREF=http://example.com&gt;Link&lt;/a&gt;&#39;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html1</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># &quot;http://example.com&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">html2</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># http://example.com</span>
+</code></pre></div>
+
+<hr />
+<h4 id="6htmlhtml-stripping">任务6：删除HTML标签（HTML Stripping）</h4>
+<p><strong>目标：</strong>把HTML标签全部删除，只保留文本</p>
+<div class="codehilite"><pre><span></span><code>输入：<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>This is <span class="p">&lt;</span><span class="nt">b</span><span class="p">&gt;</span>bold<span class="p">&lt;/</span><span class="nt">b</span><span class="p">&gt;</span> text.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+输出：This is bold text.
+</code></pre></div>
+
+<p><strong>使用 <code>.sub()</code> 方法：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;/?(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+
+<span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;p&gt;This is &lt;b&gt;bold&lt;/b&gt; text.&lt;/p&gt;&#39;</span>
+<span class="n">stripped</span> <span class="o">=</span> <span class="n">tag</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stripped</span><span class="p">)</span>  <span class="c1"># &#39;This is bold text.&#39;</span>
+</code></pre></div>
+
+<p><strong><code>.sub()</code> 详解：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">replacement</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+           <span class="err">↑</span>            <span class="err">↑</span>
+           <span class="o">|</span>            <span class="err">└─</span> <span class="n">要处理的字符串</span>
+           <span class="err">└─</span> <span class="n">替换成什么</span><span class="err">（</span><span class="n">空字符串</span><span class="o">=</span><span class="n">删除</span><span class="err">）</span>
+
+<span class="n">tag</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
+        <span class="err">↑</span>
+        <span class="n">空字符串</span> <span class="err">←</span> <span class="n">把所有匹配的标签替换成空</span>
+</code></pre></div>
+
+<p><strong>执行过程：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;p&gt;This is &lt;b&gt;bold&lt;/b&gt; text.&lt;/p&gt;&#39;</span>
+
+<span class="c1"># 找到的标签：</span>
+<span class="c1"># 1. &lt;p&gt;</span>
+<span class="c1"># 2. &lt;b&gt;</span>
+<span class="c1"># 3. &lt;/b&gt;</span>
+<span class="c1"># 4. &lt;/p&gt;</span>
+
+<span class="c1"># 每个都替换成 &#39;&#39;</span>
+
+<span class="c1"># 结果：&#39;This is bold text.&#39;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_5">四、完整代码示例</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="c1"># 定义所有正则表达式</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;/?(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+<span class="n">openTag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;(\w+\b)([^&gt;]+)?&gt;&#39;</span><span class="p">)</span>
+<span class="n">closeTag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;/(\w+\b)\s*&gt;&#39;</span><span class="p">)</span>
+<span class="n">openCloseTagPair</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;(\w+\b)([^&gt;]+)?&gt;(.*?)&lt;/\1\s*&gt;&#39;</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;href=(&quot;[^&quot;&gt;]+&quot;|[^&quot;&gt;\s]+)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+
+<span class="c1"># 读取HTML文件</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;RGX_DATA.html&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infs</span><span class="p">:</span>
+    <span class="n">linenum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">infs</span><span class="p">:</span>
+        <span class="n">linenum</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;[</span><span class="si">%d</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="n">linenum</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TEXT:&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="c1"># 1. 查找所有标签</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">tag</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** TAG:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># 2. 查找开标签（含参数）</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">openTag</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** OPENTAG:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    PARAM:&#39;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+
+        <span class="c1"># 3. 查找闭标签</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">closeTag</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** CLOSETAG:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># 4. 查找配对的标签</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">openCloseTagPair</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;** PAIR [</span><span class="si">%s</span><span class="s2">]: </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+
+        <span class="c1"># 5. 查找URL</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">url</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** URL:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># 6. 删除标签</span>
+        <span class="n">stripped</span> <span class="o">=</span> <span class="n">tag</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;** STRIPPED:&#39;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="part-btwitter">Part B：文本预处理（Twitter数据）</h2>
+<h3 id="_6">一、文本预处理的必要性</h3>
+<p><strong>问题：</strong></p>
+<div class="codehilite"><pre><span></span><code>&quot;LOVe&quot; 和 &quot;love&quot; 是同一个词吗？
+&quot;food&quot; 和 &quot;food.&quot; 是同一个词吗？
+&quot;I&#39;m&quot; 应该算1个词还是2个词？
+</code></pre></div>
+
+<p><strong>解决方案：</strong>文本预处理</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">分词</span><span class="err">（</span><span class="kr">To</span><span class="n">kenization</span><span class="err">）：</span><span class="n">把句子切分成单词</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">小写转换</span><span class="err">（</span><span class="n">Lowercasing</span><span class="err">）：</span><span class="n">统一大小写</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">标准化</span><span class="err">（</span><span class="n">Normalization</span><span class="err">）：</span><span class="n">统一格式</span>
+</code></pre></div>
+
+<hr />
+<h3 id="tokenization">二、分词（Tokenization）</h3>
+<h4 id="1">方法1：用正则表达式自己写</h4>
+<p><strong>简单版本：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">tokenise_regex</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\w+(?:&#39;\w+)?|[^\w\s]&quot;</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>r&quot;\w+(?:&#39;\w+)?|[^\w\s]&quot;
+  ↑           ↑
+  |           └─ 或：标点符号
+  └─ 单词（可能包含撇号）
+
+\w+(?:&#39;\w+)? ← 匹配单词，如 &quot;don&#39;t&quot;, &quot;it&#39;s&quot;
+|            ← 或
+[^\w\s]      ← 匹配标点符号（既不是单词字符也不是空格）
+</code></pre></div>
+
+<p><strong><code>(?:...)</code> 是什么？</strong></p>
+<div class="codehilite"><pre><span></span><code>(?:...) ← 非捕获组（Non-capturing group）
+
+和 (...) 的区别：
+(...)   ← 捕获组，会被 group(1) 提取
+(?:...) ← 非捕获组，不会被提取，只用于分组
+
+为什么用非捕获组？
+因为我们只想匹配模式，不需要单独提取这部分
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;He says I&#39;m depressed most of the time.&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenise_regex</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># [&#39;He&#39;, &#39;says&#39;, &#39;I&#39;, &quot;&#39;&quot;, &#39;m&#39;, &#39;depressed&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time&#39;, &#39;.&#39;]</span>
+</code></pre></div>
+
+<p><strong>处理撇号：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\w+(?:&#39;\w+)?|[^\w\s]&quot;</span>
+
+<span class="c1"># &quot;I&#39;m&quot;</span>
+\<span class="n">w</span><span class="o">+</span>      <span class="err">←</span> <span class="n">匹配</span> <span class="s1">&#39;I&#39;</span>
+<span class="p">(</span><span class="err">?</span><span class="p">:</span><span class="s1">&#39;\w+)?  ← 尝试匹配 &quot;&#39;</span><span class="n">m</span><span class="s2">&quot;</span>
+<span class="n">结果</span><span class="err">：</span><span class="s1">&#39;I&#39;</span> <span class="n">和</span> <span class="s2">&quot;&#39;m&quot;</span> <span class="n">分开</span>
+
+<span class="c1"># &quot;don&#39;t&quot;</span>
+\<span class="n">w</span><span class="o">+</span>      <span class="err">←</span> <span class="n">匹配</span> <span class="s1">&#39;don&#39;</span>
+<span class="p">(</span><span class="err">?</span><span class="p">:</span><span class="s1">&#39;\w+)?  ← 匹配 &quot;&#39;</span><span class="n">t</span><span class="s2">&quot;</span>
+<span class="n">结果</span><span class="err">：</span><span class="s1">&#39;don&#39;</span> <span class="n">和</span> <span class="s2">&quot;&#39;t&quot;</span> <span class="n">分开</span>
+</code></pre></div>
+
+<p><strong>问题：</strong>撇号还是被分开了！</p>
+<hr />
+<p><strong>改进版本：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\w+(?:&#39;\w+)?|[^\w\s]&quot;</span>
+
+<span class="c1"># 更好的版本：</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\w+(?:&#39;\w+)*|[^\w\s]&quot;</span>
+<span class="c1">#             ↑ 改成 * （0次或多次）</span>
+</code></pre></div>
+
+<p>但实际上原版就能工作：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;I&#39;m&quot;</span>
+
+<span class="c1"># 匹配过程：</span>
+\<span class="n">w</span><span class="o">+</span>       <span class="err">←</span> <span class="n">匹配</span> <span class="s1">&#39;I&#39;</span>
+<span class="p">(</span><span class="err">?</span><span class="p">:</span><span class="s1">&#39;\w+)? ← 尝试匹配 &quot;&#39;</span><span class="n">m</span><span class="s2">&quot;</span>
+
+<span class="n">但问题是</span><span class="err">：</span>\<span class="n">w</span> <span class="n">也能匹配</span> <span class="n">m</span>
+<span class="n">所以</span> \<span class="n">w</span><span class="o">+</span> <span class="n">会贪婪地匹配</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span> <span class="n">都匹配了</span>
+<span class="p">(</span><span class="err">?</span><span class="p">:</span><span class="s1">&#39;\w+)? 就没机会匹配撇号了</span>
+
+<span class="n">正确的pattern应该更精确</span><span class="err">：</span>
+<span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+(?:&#39;[a-zA-Z]+)?|[^\w\s]&quot;</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2nltk">方法2：用NLTK的正则表达式分词器</h4>
+<p><strong>NLTK提供的复杂pattern：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">nltk</span>
+
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&#39;&#39;(?x)          # 允许verbose模式（可以写注释）</span>
+<span class="s1">        (?:[A-Z]\.)+        # 缩写词，如 U.S.A.</span>
+<span class="s1">      | \w+(?:-\w+)*        # 带连字符的词，如 San Francisco-based</span>
+<span class="s1">      | \$?\d+(?:\.\d+)?%?  # 货币和百分比，如 $12.40, 82%</span>
+<span class="s1">      | \.\.\.              # 省略号</span>
+<span class="s1">      | [][.,;&quot;&#39;?():_`-]    # 标点符号</span>
+<span class="s1">    &#39;&#39;&#39;</span>
+
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">regexp_tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<p><strong><code>(?x)</code> 模式：</strong></p>
+<div class="codehilite"><pre><span></span><code>(?x) ← verbose模式，允许：
+  - 正则表达式中的空格被忽略
+  - 可以写注释（# ...）
+  - 让复杂的pattern更易读
+</code></pre></div>
+
+<p><strong>各部分解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">(</span><span class="err">?</span><span class="p">:[</span><span class="n">A</span><span class="o">-</span><span class="n">Z</span><span class="p">]</span>\<span class="o">.</span><span class="p">)</span><span class="o">+</span>  <span class="err">←</span> <span class="n">缩写词</span>
+<span class="c1"># U.S.A. → 匹配</span>
+<span class="c1"># [A-Z]  ← 大写字母</span>
+<span class="c1"># \.     ← 点号</span>
+<span class="c1"># +      ← 1次或多次</span>
+
+\<span class="n">w</span><span class="o">+</span><span class="p">(</span><span class="err">?</span><span class="p">:</span><span class="o">-</span>\<span class="n">w</span><span class="o">+</span><span class="p">)</span><span class="o">*</span>  <span class="err">←</span> <span class="n">带连字符的词</span>
+<span class="c1"># San Francisco-based → 匹配整个</span>
+<span class="c1"># \w+       ← 第一部分单词</span>
+<span class="c1"># (?:-\w+)* ← 0次或多次的 &quot;-单词&quot;</span>
+
+\<span class="err">$?</span>\<span class="n">d</span><span class="o">+</span><span class="p">(</span><span class="err">?</span><span class="p">:</span>\<span class="o">.</span>\<span class="n">d</span><span class="o">+</span><span class="p">)</span><span class="err">?</span><span class="o">%</span><span class="err">?</span>  <span class="err">←</span> <span class="n">数字</span><span class="err">、</span><span class="n">货币</span><span class="err">、</span><span class="n">百分比</span>
+<span class="c1"># $12.40 → 匹配</span>
+<span class="c1"># 82%    → 匹配</span>
+<span class="c1"># \$?         ← 可选的美元符号</span>
+<span class="c1"># \d+         ← 1个或多个数字</span>
+<span class="c1"># (?:\.\d+)?  ← 可选的小数部分</span>
+<span class="c1"># %?          ← 可选的百分号</span>
+
+\<span class="o">.</span>\<span class="o">.</span>\<span class="o">.</span>  <span class="err">←</span> <span class="n">省略号</span>
+<span class="c1"># ...  → 匹配</span>
+
+<span class="p">[][</span><span class="o">.</span><span class="p">,;</span><span class="s2">&quot;&#39;?():_`-]  ← 标点符号</span>
+<span class="c1"># 各种标点，包括方括号</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;The U.S.A. doesn&#39;t charge $10.5&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">regexp_tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># [&#39;The&#39;, &#39;U.S.A.&#39;, &#39;does&#39;, &quot;n&#39;t&quot;, &#39;charge&#39;, &#39;$10.5&#39;]</span>
+</code></pre></div>
+
+<hr />
+<h4 id="3nltk">方法3：用NLTK的内置分词器（最简单）</h4>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">nltk</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;He says I&#39;m depressed most of the time.&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># [&#39;He&#39;, &#39;says&#39;, &#39;I&#39;, &quot;&#39;m&quot;, &#39;depressed&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time&#39;, &#39;.&#39;]</span>
+</code></pre></div>
+
+<p><strong>优点：</strong>
+- 简单易用
+- 处理了很多边缘情况
+- 不需要自己写正则表达式</p>
+<hr />
+<h3 id="lowercasing">三、小写转换（Lowercasing）</h3>
+<h4 id="1_1">方法1：用正则表达式替换</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">lowercase_regex</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[A-Z]&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">text</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[A-Z]&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">text</span><span class="p">)</span>
+       <span class="err">↑</span>         <span class="err">↑</span>                              <span class="err">↑</span>
+       <span class="o">|</span>         <span class="o">|</span>                              <span class="err">└─</span> <span class="n">原文本</span>
+       <span class="o">|</span>         <span class="err">└─</span> <span class="n">替换函数</span><span class="err">：</span><span class="n">把匹配的字符转小写</span>
+       <span class="err">└─</span> <span class="n">pattern</span><span class="err">：</span><span class="n">匹配大写字母</span>
+
+<span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+       <span class="err">↑</span>  <span class="err">↑</span>         <span class="err">↑</span>
+       <span class="o">|</span>  <span class="o">|</span>         <span class="err">└─</span> <span class="n">转小写</span>
+       <span class="o">|</span>  <span class="err">└─</span> <span class="n">获取匹配的字符</span>
+       <span class="err">└─</span> <span class="n">匹配对象</span>
+</code></pre></div>
+
+<p><strong>执行过程：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;He Says HELLO&quot;</span>
+
+<span class="c1"># 匹配到：H, S, H, E, L, L, O</span>
+<span class="c1"># 每个都调用 lambda 函数</span>
+
+<span class="c1"># H → lambda(match_H) → match_H.group(0).lower() → &#39;h&#39;</span>
+<span class="c1"># S → lambda(match_S) → match_S.group(0).lower() → &#39;s&#39;</span>
+<span class="c1"># ...</span>
+
+<span class="c1"># 结果：&quot;he says hello&quot;</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2python">方法2：用Python内置方法（更简单）</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;He Says HELLO&quot;</span>
+<span class="n">lowercased</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">lowercased</span><span class="p">)</span>  <span class="c1"># &quot;he says hello&quot;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="twitter">四、Twitter特殊元素处理</h3>
+<p><strong>Twitter文本的特点：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nv">@username</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="n">提到用户</span>
+<span class="n">#hashtag</span><span class="w">   </span><span class="err">←</span><span class="w"> </span><span class="n">话题标签</span>
+<span class="err">:</span><span class="p">)</span><span class="w">         </span><span class="err">←</span><span class="w"> </span><span class="n">表情符号</span><span class="err">（</span><span class="n">文本</span><span class="err">）</span>
+<span class="err">😊</span><span class="w">         </span><span class="err">←</span><span class="w"> </span><span class="n">表情符号</span><span class="err">（</span><span class="n">emoji图像</span><span class="err">）</span>
+</code></pre></div>
+
+<p><strong>为什么要处理？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">原文本</span><span class="err">：</span>
+<span class="ss">&quot;I love @Apple! #iPhone :)&quot;</span>
+<span class="ss">&quot;I love @Google! #Pixel :)&quot;</span>
+
+<span class="n">分词后</span><span class="err">：</span>
+<span class="o">[</span><span class="n">&#39;I&#39;, &#39;love&#39;, &#39;@Apple&#39;, &#39;!&#39;, &#39;#iPhone&#39;, &#39;:)&#39;</span><span class="o">]</span>
+<span class="o">[</span><span class="n">&#39;I&#39;, &#39;love&#39;, &#39;@Google&#39;, &#39;!&#39;, &#39;#Pixel&#39;, &#39;:)&#39;</span><span class="o">]</span>
+
+<span class="n">问题</span><span class="err">：</span><span class="nv">@Apple</span><span class="w"> </span><span class="n">和</span><span class="w"> </span><span class="nv">@Google</span><span class="w"> </span><span class="n">被认为是不同的词</span>
+<span class="w">     </span><span class="n">#iPhone</span><span class="w"> </span><span class="n">和</span><span class="w"> </span><span class="n">#Pixel</span><span class="w"> </span><span class="n">也是不同的词</span>
+
+<span class="n">但实际上</span><span class="err">，</span><span class="n">我们可能只关心</span><span class="err">：</span>
+<span class="o">-</span><span class="w"> </span><span class="n">有没有提到用户</span><span class="err">（</span><span class="n">不管是谁</span><span class="err">）</span>
+<span class="o">-</span><span class="w"> </span><span class="n">有没有用话题标签</span><span class="err">（</span><span class="n">不管什么话题</span><span class="err">）</span>
+<span class="o">-</span><span class="w"> </span><span class="n">情感如何</span><span class="err">（</span><span class="n">表情符号</span><span class="err">）</span>
+</code></pre></div>
+
+<p><strong>解决方案：标准化</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nv">@Apple</span><span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="o">&lt;</span><span class="n">MENTIONS</span><span class="o">&gt;</span>
+<span class="nv">@Google</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="o">&lt;</span><span class="n">MENTIONS</span><span class="o">&gt;</span>
+<span class="n">#iPhone</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="o">&lt;</span><span class="n">HASHTAGS</span><span class="o">&gt;</span>
+<span class="n">#Pixel</span><span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="o">&lt;</span><span class="n">HASHTAGS</span><span class="o">&gt;</span>
+<span class="err">:</span><span class="p">)</span><span class="w">      </span><span class="err">→</span><span class="w"> </span><span class="o">&lt;</span><span class="n">EMOTICONS</span><span class="o">&gt;</span>
+</code></pre></div>
+
+<hr />
+<h4 id="_7">实现代码</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">preprocess_tweet</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">include_emojis</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># Pattern 1: @mentions</span>
+    <span class="n">mention_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;@[a-zA-Z0-9_]{0,15}&quot;</span>
+
+    <span class="c1"># Pattern 2: #hashtags</span>
+    <span class="n">hashtag_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;#(\w+)&quot;</span>
+
+    <span class="c1"># Pattern 3: 文本表情符号</span>
+    <span class="n">emoticon_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\:\w+\:|\&lt;[\/</span><span class="se">\\</span><span class="s2">]?3|[\(\)</span><span class="se">\\</span><span class="s2">\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*</span><span class="se">\\</span><span class="s2">\)\(\/\|])(?=\s|[\!\.\?]|$)&quot;</span>
+
+    <span class="c1"># 替换（注意顺序很重要！）</span>
+    <span class="n">processed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">emoticon_pattern</span><span class="p">,</span> <span class="s2">&quot;&lt;EMOTICONS&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="n">processed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">hashtag_pattern</span><span class="p">,</span> <span class="s2">&quot;&lt;HASHTAGS&gt;&quot;</span><span class="p">,</span> <span class="n">processed</span><span class="p">)</span>
+    <span class="n">processed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">mention_pattern</span><span class="p">,</span> <span class="s2">&quot;&lt;MENTIONS&gt;&quot;</span><span class="p">,</span> <span class="n">processed</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">processed</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<p><strong>Pattern 1: @mentions</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">mention_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;@[a-zA-Z0-9_]{0,15}&quot;</span>
+
+<span class="o">@</span>              <span class="err">←</span> <span class="o">@</span> <span class="n">符号</span>
+<span class="p">[</span><span class="n">a</span><span class="o">-</span><span class="n">zA</span><span class="o">-</span><span class="n">Z0</span><span class="o">-</span><span class="mi">9</span><span class="n">_</span><span class="p">]</span>   <span class="err">←</span> <span class="n">字母</span><span class="err">、</span><span class="n">数字</span><span class="err">、</span><span class="n">下划线</span>
+<span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">15</span><span class="p">}</span>         <span class="err">←</span> <span class="mi">0</span><span class="n">到15个字符</span><span class="err">（</span><span class="n">Twitter用户名限制</span><span class="err">）</span>
+
+<span class="n">例子</span><span class="err">：</span>
+<span class="nd">@username123</span> <span class="err">→</span> <span class="n">匹配</span>
+<span class="nd">@a_b_c</span>       <span class="err">→</span> <span class="n">匹配</span>
+</code></pre></div>
+
+<hr />
+<p><strong>Pattern 2: #hashtags</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">hashtag_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;#(\w+)&quot;</span>
+
+<span class="c1">#     ← # 符号</span>
+<span class="p">(</span>\<span class="n">w</span><span class="o">+</span><span class="p">)</span> <span class="err">←</span> <span class="mi">1</span><span class="n">个或多个单词字符</span><span class="err">（</span><span class="n">捕获组</span><span class="err">）</span>
+
+<span class="n">例子</span><span class="err">：</span>
+<span class="c1">#iPhone  → 匹配，group(1)=&#39;iPhone&#39;</span>
+<span class="c1">#AI2023  → 匹配，group(1)=&#39;AI2023&#39;</span>
+</code></pre></div>
+
+<p><strong>为什么用捕获组 <code>(\w+)</code>？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 不用捕获组：</span>
+<span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;#\w+&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;HASHTAGS&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="c1"># 结果：完全替换 #iPhone → &lt;HASHTAGS&gt;</span>
+
+<span class="c1"># 用捕获组：</span>
+<span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;#(\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;HASHTAGS&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="c1"># 结果：也是完全替换</span>
+
+<span class="c1"># 实际上这里捕获组不必要，但保留下来是为了：</span>
+<span class="c1"># 1. 可能以后需要访问hashtag内容</span>
+<span class="c1"># 2. 代码更清晰</span>
+</code></pre></div>
+
+<hr />
+<p><strong>Pattern 3: 文本表情符号（非常复杂！）</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">emoticon_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\:\w+\:|\&lt;[\/</span><span class="se">\\</span><span class="s2">]?3|[\(\)</span><span class="se">\\</span><span class="s2">\D|\*\$][\-\^]?[\:\;\=]|[\:\;\=B8][\-\^]?[3DOPp\@\$\*</span><span class="se">\\</span><span class="s2">\)\(\/\|])(?=\s|[\!\.\?]|$)&quot;</span>
+</code></pre></div>
+
+<p>这个太复杂，我们分解：</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 简化版：</span>
+<span class="n">emoticon_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\:\w+\:)&quot;</span>  <span class="c1"># 只匹配 :smile:</span>
+                 <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;|&quot;</span>          <span class="c1"># 或</span>
+                 <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;[\:\;\=][\)\(]&quot;</span>  <span class="c1"># :) :( =) =(</span>
+</code></pre></div>
+
+<p><strong>分解详细版本：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="s s-Atom">第1部分：\:\w+\:</span>
+  <span class="s s-Atom">匹配：</span><span class="o">:</span><span class="s s-Atom">smile</span><span class="p">:</span> <span class="o">:</span><span class="s s-Atom">joy</span><span class="p">:</span> <span class="o">:</span><span class="s s-Atom">cry</span><span class="p">:</span>
+
+<span class="s s-Atom">第2部分：\&lt;</span><span class="p">[</span><span class="s s-Atom">\/\\</span><span class="p">]</span><span class="nb">?</span><span class="mi">3</span>
+  <span class="s s-Atom">匹配：</span><span class="o">&lt;</span><span class="mi">3</span> <span class="s s-Atom">&lt;/</span><span class="mi">3</span> <span class="s s-Atom">&lt;\</span><span class="mi">3</span><span class="s s-Atom">（心形）</span>
+
+<span class="s s-Atom">第3部分：</span><span class="p">[</span><span class="s s-Atom">\</span><span class="p">(</span><span class="s s-Atom">\</span><span class="p">)</span><span class="s s-Atom">\\\</span><span class="nv">D</span><span class="p">|</span><span class="s s-Atom">\*\</span><span class="err">$</span><span class="p">][</span><span class="s s-Atom">\-\^</span><span class="p">]</span><span class="nb">?</span><span class="p">[</span><span class="s s-Atom">\:\</span><span class="p">;</span><span class="s s-Atom">\=</span><span class="p">]</span>
+  <span class="nf">匹配各种复杂表情，如</span> <span class="o">:-</span><span class="p">)</span>  <span class="p">;)</span>  <span class="s s-Atom">=</span><span class="p">(</span>
+
+<span class="s s-Atom">第4部分：</span><span class="p">[</span><span class="s s-Atom">\:\</span><span class="p">;</span><span class="s s-Atom">\=</span><span class="nv">B8</span><span class="p">][</span><span class="s s-Atom">\-\^</span><span class="p">]</span><span class="nb">?</span><span class="p">[</span><span class="mi">3</span><span class="nv">DOPp</span><span class="s s-Atom">\@\</span><span class="err">$</span><span class="s s-Atom">\*\\\</span><span class="p">)</span><span class="s s-Atom">\</span><span class="p">(</span><span class="s s-Atom">\/\</span><span class="p">|]</span>
+  <span class="s s-Atom">匹配更多变体</span>
+
+<span class="nf">最后：</span><span class="p">(</span><span class="nb">?</span><span class="s s-Atom">=\s</span><span class="p">|[</span><span class="s s-Atom">\</span><span class="p">!</span><span class="s s-Atom">\.\?</span><span class="p">]|</span><span class="err">$</span><span class="p">)</span>
+  <span class="s s-Atom">←</span> <span class="s s-Atom">前瞻断言（Lookahead</span> <span class="s s-Atom">assertion）</span>
+  <span class="s s-Atom">确保表情符号后面是空格、标点或结尾</span>
+</code></pre></div>
+
+<p><strong>前瞻断言 <code>(?=...)</code> 解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>(?=...) ← 正向前瞻（Positive lookahead）
+
+意思：后面必须匹配...，但不消耗字符
+
+例子：
+text = &quot;happy:)sad&quot;
+
+pattern = r&quot;:\)(?=\s)&quot;
+# 不匹配！因为 :) 后面不是空格
+
+text = &quot;happy:) sad&quot;
+pattern = r&quot;:\)(?=\s)&quot;
+# 匹配！因为 :) 后面是空格
+# 但匹配的只是 :)，不包括空格
+</code></pre></div>
+
+<hr />
+<p><strong>替换顺序为什么重要？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Love @user #tag :)&quot;</span>
+
+<span class="c1"># 错误顺序1：先替换mentions</span>
+<span class="n">processed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">mention_pattern</span><span class="p">,</span> <span class="s2">&quot;&lt;MENTIONS&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="c1"># 结果：&quot;Love &lt;MENTIONS&gt; #tag :)&quot;</span>
+<span class="n">processed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">hashtag_pattern</span><span class="p">,</span> <span class="s2">&quot;&lt;HASHTAGS&gt;&quot;</span><span class="p">,</span> <span class="n">processed</span><span class="p">)</span>
+<span class="c1"># 结果：&quot;Love &lt;MENTIONS&gt; &lt;HASHTAGS&gt; :)&quot;</span>
+
+<span class="c1"># 问题：如果hashtag pattern写错，可能匹配到 &lt;MENTIONS&gt; 的一部分</span>
+
+<span class="c1"># 推荐顺序：从最特殊到最一般</span>
+<span class="c1"># 1. emoticons（最特殊，符号容易和其他冲突）</span>
+<span class="c1"># 2. hashtags</span>
+<span class="c1"># 3. mentions</span>
+</code></pre></div>
+
+<hr />
+<h4 id="emoji">Emoji处理（可选挑战）</h4>
+<p><strong>Emoji是什么？</strong></p>
+<div class="codehilite"><pre><span></span><code>😊 ← 这是emoji（Unicode字符）
+:) ← 这是emoticon（文本符号）
+</code></pre></div>
+
+<p><strong>匹配Emoji的pattern：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">emoji_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pattern</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U0001F600</span><span class="s2">-</span><span class="se">\U0001F64F</span><span class="s2">&quot;</span>  <span class="c1"># Emoticons range</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U0001F300</span><span class="s2">-</span><span class="se">\U0001F5FF</span><span class="s2">&quot;</span>  <span class="c1"># Symbols &amp; pictographs</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U0001FAC0</span><span class="s2">-</span><span class="se">\U0001FaFF</span><span class="s2">&quot;</span>  <span class="c1"># Extended symbols</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U00012600</span><span class="s2">-</span><span class="se">\U000126FF</span><span class="s2">&quot;</span>  <span class="c1"># Miscellaneous</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U00002700</span><span class="s2">-</span><span class="se">\U000027BF</span><span class="s2">&quot;</span>  <span class="c1"># Dingbats</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U0001F100</span><span class="s2">-</span><span class="se">\U0001F1FF</span><span class="s2">&quot;</span>  <span class="c1"># Alphanumeric supplement</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U0001F680</span><span class="s2">-</span><span class="se">\U0001F6FF</span><span class="s2">&quot;</span>  <span class="c1"># Transport &amp; map</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U0001F1E0</span><span class="s2">-</span><span class="se">\U0001F1FF</span><span class="s2">&quot;</span>  <span class="c1"># Flags</span>
+    <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\U00002190</span><span class="s2">-</span><span class="se">\U000021FF</span><span class="s2">&quot;</span>  <span class="c1"># Arrows</span>
+    <span class="s2">&quot;]+&quot;</span><span class="p">,</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Unicode范围解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>\U0001F600-\U0001F64F
+  ↑        ↑
+  |        └─ 结束码点
+  └─ 开始码点
+
+U+1F600 = 😀 (grinning face)
+U+1F64F = 🙏 (folded hands)
+
+这个范围包含所有&quot;脸部表情&quot;emoji
+</code></pre></div>
+
+<p><strong>使用：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;I love Python! 😊🎉&quot;</span>
+<span class="n">processed</span> <span class="o">=</span> <span class="n">emoji_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&lt;EMOJIS&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">processed</span><span class="p">)</span>
+<span class="c1"># &quot;I love Python! &lt;EMOJIS&gt;&lt;EMOJIS&gt;&quot;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="-type-token-ratio-ttr">五、类型-标记比率（Type-Token Ratio, TTR）</h3>
+<h4 id="_8">概念</h4>
+<p><strong>Types（类型）：</strong>不同单词的数量（词汇量）</p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;the cat and the dog&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;and&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">]</span>
+
+<span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># {&#39;the&#39;, &#39;cat&#39;, &#39;and&#39;, &#39;dog&#39;}</span>
+<span class="n">num_types</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>  <span class="c1"># 4</span>
+</code></pre></div>
+
+<p><strong>Tokens（标记）：</strong>所有单词的总数</p>
+<div class="codehilite"><pre><span></span><code><span class="n">num_tokens</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># 5</span>
+</code></pre></div>
+
+<p><strong>TTR（类型-标记比率）：</strong></p>
+<div class="codehilite"><pre><span></span><code>TTR = Types / Tokens = 4 / 5 = 0.8
+</code></pre></div>
+
+<p><strong>意义：</strong></p>
+<div class="codehilite"><pre><span></span><code>高TTR（接近1）：词汇丰富，很少重复
+  例如：学术论文
+
+低TTR（接近0）：词汇简单，大量重复
+  例如：儿童读物
+</code></pre></div>
+
+<hr />
+<h4 id="_9">实现代码</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">count_types_and_tokens</span><span class="p">(</span><span class="n">tweets_list</span><span class="p">):</span>
+    <span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets_list</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tweet</span><span class="p">:</span>
+            <span class="c1"># 只统计包含字母或数字的token（排除标点）</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;[a-zA-Z0-9]+&quot;</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+                <span class="n">types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># 集合，自动去重</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>    <span class="c1"># 列表，保留重复</span>
+
+<span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets_list</span><span class="p">:</span>
+    <span class="c1"># tweets_list是列表的列表</span>
+    <span class="c1"># 例如：[[&#39;I&#39;, &#39;love&#39;, &#39;Python&#39;], [&#39;Python&#39;, &#39;is&#39;, &#39;great&#39;]]</span>
+
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tweet</span><span class="p">:</span>
+        <span class="c1"># 检查token是否包含字母或数字</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;[a-zA-Z0-9]+&quot;</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>      <span class="c1"># 集合自动去重</span>
+            <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>  <span class="c1"># 列表保留所有</span>
+</code></pre></div>
+
+<p><strong>为什么要检查 <code>[a-zA-Z0-9]+</code>？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;Python&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;!&#39;</span><span class="p">]</span>
+
+<span class="c1"># 不检查：</span>
+<span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;Python&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;!&#39;</span><span class="p">}</span>  <span class="c1"># 5个types</span>
+<span class="n">tokens_count</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">TTR</span> <span class="o">=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">5</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="err">←</span> <span class="n">但标点不算</span><span class="s2">&quot;词汇&quot;</span><span class="err">！</span>
+
+<span class="c1"># 检查后：</span>
+<span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;Python&#39;</span><span class="p">}</span>  <span class="c1"># 3个types</span>
+<span class="n">tokens_count</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">TTR</span> <span class="o">=</span> <span class="mi">3</span><span class="o">/</span><span class="mi">3</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="err">←</span> <span class="n">更准确</span>
+</code></pre></div>
+
+<hr />
+<h4 id="ttr">计算TTR</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">print_config_ttr</span><span class="p">(</span><span class="n">config_string</span><span class="p">,</span> <span class="n">processed_tweets</span><span class="p">):</span>
+    <span class="n">num_types</span><span class="p">,</span> <span class="n">num_tokens</span> <span class="o">=</span> <span class="n">count_types_and_tokens</span><span class="p">(</span><span class="n">processed_tweets</span><span class="p">)</span>
+    <span class="n">ttr</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">num_types</span> <span class="o">/</span> <span class="n">num_tokens</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_string</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ttr</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">num_types</span><span class="si">}</span><span class="s2"> types, </span><span class="si">{</span><span class="n">num_tokens</span><span class="si">}</span><span class="s2"> tokens)&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tweets</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;I love Python&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;I love coding&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Python is great&quot;</span>
+<span class="p">]</span>
+
+<span class="c1"># 配置1：无预处理</span>
+<span class="n">tweets_split</span> <span class="o">=</span> <span class="p">[</span><span class="n">tweet</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">]</span>
+<span class="n">print_config_ttr</span><span class="p">(</span><span class="s2">&quot;No preprocessing&quot;</span><span class="p">,</span> <span class="n">tweets_split</span><span class="p">)</span>
+
+<span class="c1"># 配置2：分词</span>
+<span class="n">tweets_tokenized</span> <span class="o">=</span> <span class="p">[</span><span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">tweet</span><span class="p">)</span> <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">]</span>
+<span class="n">print_config_ttr</span><span class="p">(</span><span class="s2">&quot;Tokenised&quot;</span><span class="p">,</span> <span class="n">tweets_tokenized</span><span class="p">)</span>
+
+<span class="c1"># 配置3：分词 + 小写</span>
+<span class="n">tweets_lower</span> <span class="o">=</span> <span class="p">[</span><span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">tweet</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">]</span>
+<span class="n">print_config_ttr</span><span class="p">(</span><span class="s2">&quot;Tokenised + lowercased&quot;</span><span class="p">,</span> <span class="n">tweets_lower</span><span class="p">)</span>
+
+<span class="c1"># 输出可能是：</span>
+<span class="c1"># No preprocessing: 0.778 (7 types, 9 tokens)</span>
+<span class="c1"># Tokenised: 0.778 (7 types, 9 tokens)</span>
+<span class="c1"># Tokenised + lowercased: 0.714 (5 types, 7 tokens)</span>
+</code></pre></div>
+
+<p><strong>为什么TTR会下降？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 配置1：无预处理</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;Python&#39;</span><span class="p">,</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;coding&#39;</span><span class="p">,</span> <span class="s1">&#39;Python&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;great&#39;</span><span class="p">]</span>
+<span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;Python&#39;</span><span class="p">,</span> <span class="s1">&#39;coding&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;great&#39;</span><span class="p">}</span>  <span class="c1"># 6个</span>
+<span class="c1"># （去掉标点后）</span>
+<span class="n">TTR</span> <span class="o">=</span> <span class="mi">6</span> <span class="o">/</span> <span class="mi">9</span> <span class="o">=</span> <span class="mf">0.667</span>
+
+<span class="c1"># 配置3：小写</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;coding&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;great&#39;</span><span class="p">]</span>
+<span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">,</span> <span class="s1">&#39;coding&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;great&#39;</span><span class="p">}</span>  <span class="c1"># 6个</span>
+<span class="c1"># &#39;I&#39; 和 &#39;i&#39; 合并了！&#39;Python&#39; 和 &#39;python&#39; 合并了！</span>
+<span class="c1"># 但在这个例子中，原本都是小写，所以types数量不变</span>
+
+<span class="c1"># 但如果有：</span>
+<span class="c1"># &quot;I love Python&quot; 和 &quot;i love python&quot;</span>
+<span class="c1"># 不小写：types = {&#39;I&#39;, &#39;love&#39;, &#39;Python&#39;, &#39;i&#39;, &#39;python&#39;}  # 5个</span>
+<span class="c1"># 小写后：types = {&#39;i&#39;, &#39;love&#39;, &#39;python&#39;}  # 3个</span>
+<span class="c1"># types减少 → TTR下降</span>
+</code></pre></div>
+
+<p><strong>对下游任务的影响：</strong></p>
+<div class="codehilite"><pre><span></span><code>TTR下降 = 词汇量减少 = 每个词出现频率增加
+
+优点：
+1. 更容易找到模式
+2. 稀疏性降低
+3. 模型训练更稳定
+
+缺点：
+1. 可能丢失信息（如 &#39;Apple&#39; 公司 vs &#39;apple&#39; 水果）
+2. 情感分析可能受影响（&#39;LOVE&#39; vs &#39;love&#39; 强度不同）
+</code></pre></div>
+
+<hr />
+<h3 id="_10">六、完整执行流程示例</h3>
+<p><strong>输入数据：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tweets</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;He says I&#39;m depressed most of the time. #sad&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;For the first time I get to see @username actually being hateful! it was beautiful:)&quot;</span><span class="p">,</span>
+    <span class="s1">&#39;&quot;The San Francisco-based restaurant&quot; they said, &quot;doesn</span><span class="se">\&#39;</span><span class="s1">t charge $10.5&quot;&#39;</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<hr />
+<p><strong>步骤1：原始分词</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">:</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># [&#39;He&#39;, &#39;says&#39;, &quot;I&#39;m&quot;, &#39;depressed&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time.&#39;, &#39;#sad&#39;]</span>
+<span class="c1"># [&#39;For&#39;, &#39;the&#39;, &#39;first&#39;, &#39;time&#39;, &#39;I&#39;, &#39;get&#39;, &#39;to&#39;, &#39;see&#39;, &#39;@username&#39;, ...]</span>
+</code></pre></div>
+
+<p><strong>问题：</strong>
+- <code>"I'm"</code> 没有分开
+- <code>"time."</code> 包含标点
+- <code>"#sad"</code> 包含#号</p>
+<hr />
+<p><strong>步骤2：用NLTK分词</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">:</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">tweet</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># [&#39;He&#39;, &#39;says&#39;, &#39;I&#39;, &quot;&#39;m&quot;, &#39;depressed&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time&#39;, &#39;.&#39;, &#39;#&#39;, &#39;sad&#39;]</span>
+<span class="c1"># ...</span>
+</code></pre></div>
+
+<p><strong>改进：</strong>
+- <code>"I'm"</code> 分成了 <code>'I'</code> 和 <code>"'m"</code>
+- 标点独立了</p>
+<hr />
+<p><strong>步骤3：小写 + 分词</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">:</span>
+    <span class="n">lowercased</span> <span class="o">=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">lowercased</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># [&#39;he&#39;, &#39;says&#39;, &#39;i&#39;, &quot;&#39;m&quot;, &#39;depressed&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time&#39;, &#39;.&#39;, &#39;#&#39;, &#39;sad&#39;]</span>
+</code></pre></div>
+
+<hr />
+<p><strong>步骤4：预处理 + 小写 + 分词</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">:</span>
+    <span class="n">lowercased</span> <span class="o">=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">preprocessed</span> <span class="o">=</span> <span class="n">preprocess_tweet</span><span class="p">(</span><span class="n">lowercased</span><span class="p">)</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">preprocessed</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># [&#39;he&#39;, &#39;says&#39;, &#39;i&#39;, &quot;&#39;m&quot;, &#39;depressed&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time&#39;, &#39;.&#39;, &#39;&lt;HASHTAGS&gt;&#39;]</span>
+<span class="c1"># [&#39;for&#39;, &#39;the&#39;, &#39;first&#39;, &#39;time&#39;, &#39;i&#39;, &#39;get&#39;, &#39;to&#39;, &#39;see&#39;, &#39;&lt;MENTIONS&gt;&#39;, &#39;actually&#39;, &#39;being&#39;, &#39;hateful&#39;, &#39;!&#39;, &#39;it&#39;, &#39;was&#39;, &#39;beautiful&#39;, &#39;&lt;EMOTICONS&gt;&#39;]</span>
+<span class="c1"># [&#39;&quot;&#39;, &#39;the&#39;, &#39;san&#39;, &#39;francisco-based&#39;, &#39;restaurant&#39;, &#39;&quot;&#39;, &#39;they&#39;, &#39;said&#39;, &#39;,&#39;, &#39;&quot;&#39;, &#39;does&#39;, &quot;n&#39;t&quot;, &#39;charge&#39;, &#39;$&#39;, &#39;10.5&#39;, &#39;&quot;&#39;]</span>
+</code></pre></div>
+
+<p><strong>改进：</strong>
+- <code>#sad</code> → <code>&lt;HASHTAGS&gt;</code>
+- <code>@username</code> → <code>&lt;MENTIONS&gt;</code>
+- <code>:)</code> → <code>&lt;EMOTICONS&gt;</code></p>
+<hr />
+<p><strong>步骤5：计算TTR</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 配置1：无预处理</span>
+<span class="n">tweets_split</span> <span class="o">=</span> <span class="p">[</span><span class="n">tweet</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">]</span>
+<span class="n">num_types</span><span class="p">,</span> <span class="n">num_tokens</span> <span class="o">=</span> <span class="n">count_types_and_tokens</span><span class="p">(</span><span class="n">tweets_split</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TTR: </span><span class="si">{</span><span class="n">num_types</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">num_tokens</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># 配置4：完整预处理</span>
+<span class="n">processed_tweets</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">preprocess_tweet</span><span class="p">(</span><span class="n">tweet</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+    <span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span>
+<span class="p">]</span>
+<span class="n">num_types</span><span class="p">,</span> <span class="n">num_tokens</span> <span class="o">=</span> <span class="n">count_types_and_tokens</span><span class="p">(</span><span class="n">processed_tweets</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TTR: </span><span class="si">{</span><span class="n">num_types</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">num_tokens</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>结果分析：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="nx">无预处理</span><span class="err">：</span>
+<span class="w">  </span><span class="nx">types</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">很多</span><span class="err">（</span><span class="nx">每个</span><span class="err">@</span><span class="nx">username</span><span class="p">,</span><span class="w"> </span><span class="err">#</span><span class="nx">hashtag都算不同的词</span><span class="err">）</span>
+<span class="w">  </span><span class="nx">TTR</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">高</span>
+
+<span class="nx">完整预处理</span><span class="err">：</span>
+<span class="w">  </span><span class="nx">types</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">较少</span><span class="err">（</span><span class="nx">所有</span><span class="err">@</span><span class="nx">username都变成</span><span class="p">&lt;</span><span class="nx">MENTIONS</span><span class="p">&gt;</span><span class="err">）</span>
+<span class="w">  </span><span class="nx">TTR</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">低</span>
+
+<span class="nx">TTR降低是好事</span><span class="err">！</span>
+<span class="err">→</span><span class="w"> </span><span class="nx">词汇量减少</span>
+<span class="err">→</span><span class="w"> </span><span class="nx">每个词出现频率增加</span>
+<span class="err">→</span><span class="w"> </span><span class="nx">机器学习模型更容易学习模式</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_11">七、纸笔考试重点</h2>
+<h3 id="_12">必须掌握</h3>
+<h4 id="1-vs_1">1. ✅ <strong>贪婪 vs 非贪婪匹配</strong></h4>
+<div class="codehilite"><pre><span></span><code>贪婪：.*<span class="w">   </span>→<span class="w"> </span>尽可能多匹配
+非贪婪：.*?<span class="w"> </span>→<span class="w"> </span>尽可能少匹配
+
+<span class="nt">&lt;p&gt;&lt;b&gt;</span>text<span class="nt">&lt;/b&gt;</span>
+<span class="w">  </span>.*<span class="w">  </span>匹配：p&gt;<span class="nt">&lt;b&gt;</span>text<span class="err">&lt;</span>/b
+<span class="w">  </span>.*?<span class="w"> </span>匹配：p
+</code></pre></div>
+
+<h4 id="2_2">2. ✅ <strong>字符类取反 <code>[^...]</code></strong></h4>
+<div class="codehilite"><pre><span></span><code>[^&gt;]+ → 匹配1个或多个&quot;非&gt;&quot;字符
+[^&quot;&gt;\s]+ → 匹配1个或多个&quot;非引号、非&gt;、非空格&quot;字符
+</code></pre></div>
+
+<h4 id="3-1-2">3. ✅ <strong>反向引用 <code>\1</code>, <code>\2</code></strong></h4>
+<div class="codehilite"><pre><span></span><code>r&#39;<span class="err">&lt;</span>(\w+)&gt;(.*?)<span class="err">&lt;</span>/\1&gt;&#39;
+<span class="w">   </span>↑<span class="w">           </span>↑
+<span class="w">   </span>第1组<span class="w">      </span>必须匹配第1组的内容
+
+<span class="nt">&lt;b&gt;</span>text<span class="nt">&lt;/b&gt;</span><span class="w"> </span>→<span class="w"> </span>匹配（开闭标签都是b）
+<span class="nt">&lt;b&gt;</span>text<span class="nt">&lt;/i&gt;</span><span class="w"> </span>→<span class="w"> </span>不匹配（开闭标签不同）
+</code></pre></div>
+
+<h4 id="4_1">4. ✅ <strong>前瞻断言 <code>(?=...)</code></strong></h4>
+<div class="codehilite"><pre><span></span><code>(?=...) → 后面必须是...，但不消耗字符
+(?!...) → 后面不能是...
+
+pattern = r&quot;:\)(?=\s)&quot;
+&quot;happy:) &quot; → 匹配（后面是空格）
+&quot;happy:).&quot; → 不匹配（后面是点号）
+</code></pre></div>
+
+<h4 id="5">5. ✅ <strong>非捕获组 <code>(?:...)</code></strong></h4>
+<div class="codehilite"><pre><span></span><code>(...)   → 捕获组，可用group(1)提取
+(?:...) → 非捕获组，只用于分组，不提取
+
+r&quot;\w+(?:&#39;\w+)?&quot;
+      ↑
+      非捕获，不会被group(1)提取
+</code></pre></div>
+
+<h4 id="6-ttr">6. ✅ <strong>TTR计算</strong></h4>
+<div class="codehilite"><pre><span></span><code>TTR = Types / Tokens
+
+Types = 不同单词数量
+Tokens = 总单词数量
+
+例子：
+&quot;the cat and the dog&quot;
+Types = 4（the, cat, and, dog）
+Tokens = 5
+TTR = 4/5 = 0.8
+</code></pre></div>
+
+<h4 id="7-ttr">7. ✅ <strong>预处理对TTR的影响</strong></h4>
+<div class="codehilite"><pre><span></span><code><span class="n">预处理步骤越多</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">Types越少</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">TTR越低</span>
+
+<span class="n">原因</span><span class="err">：</span>
+<span class="mf">1.</span><span class="w"> </span><span class="n">小写转换</span><span class="err">：</span><span class="s1">&#39;The&#39;</span><span class="w"> </span><span class="n">和</span><span class="w"> </span><span class="s1">&#39;the&#39;</span><span class="w"> </span><span class="n">合并</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">标准化</span><span class="err">：</span><span class="nv">@user1</span><span class="p">,</span><span class="w"> </span><span class="nv">@user2</span><span class="w"> </span><span class="n">都变成</span><span class="w"> </span><span class="o">&lt;</span><span class="n">MENTIONS</span><span class="o">&gt;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_13">可能的考题</h3>
+<h4 id="1_2">题型1：写正则表达式</h4>
+<p><strong>题目：</strong>写一个正则表达式匹配HTML的<code>&lt;img&gt;</code>标签，提取src属性</p>
+<div class="codehilite"><pre><span></span><code><span class="p">&lt;</span><span class="nt">img</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;photo.jpg&quot;</span> <span class="na">width</span><span class="o">=</span><span class="s">&quot;100&quot;</span><span class="p">&gt;</span>
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># 方案1：匹配整个标签，提取src</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;img\s+[^&gt;]*src=&quot;([^&quot;]+)&quot;[^&gt;]*&gt;&#39;</span>
+
+<span class="c1"># 方案2：只提取src值</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;src=&quot;([^&quot;]+)&quot;&#39;</span>
+
+<span class="c1"># 测试</span>
+<span class="n">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;img src=&quot;photo.jpg&quot; width=&quot;100&quot;&gt;&#39;</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># &#39;photo.jpg&#39;</span>
+</code></pre></div>
+
+
+
+**解释：**
+
+<div class="codehilite"><pre><span></span><code>&lt;img\s+      ← &lt;img 后面至少1个空格
+[^&gt;]*        ← 0个或多个非&gt;字符（src前面可能有其他属性）
+src=&quot;([^&quot;]+)&quot; ← src=&quot;...&quot; （捕获引号内的内容）
+[^&gt;]*        ← src后面可能还有其他属性
+<span class="k">&gt; </span><span class="ge">           ← 右尖括号</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="2_3">题型2：贪婪匹配问题</h4>
+<p><strong>题目：</strong>为什么下面的正则表达式不能正确匹配每个单独的标签？</p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;&lt;b&gt;text&lt;/b&gt;&lt;/p&gt;&quot;</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;.*&gt;&#39;</span>
+<span class="c1"># 结果：匹配整个字符串</span>
+</code></pre></div>
+
+<p>如何修复？</p>
+<details>
+<summary>答案</summary>
+
+**问题原因：**
+
+<div class="codehilite"><pre><span></span><code>.* 是贪婪匹配，会尽可能多地匹配
+从第一个 &lt; 开始，一直匹配到最后一个 &gt;
+</code></pre></div>
+
+
+
+**修复方案1：非贪婪匹配**
+
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;.*?&gt;&#39;</span>
+<span class="c1"># 结果：&lt;p&gt;, &lt;b&gt;, &lt;/b&gt;, &lt;/p&gt;</span>
+</code></pre></div>
+
+
+
+**修复方案2：字符类取反**
+
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;[^&gt;]+&gt;&#39;</span>
+<span class="c1"># [^&gt;]+ 只匹配&quot;非&gt;&quot;字符，遇到&gt;就停止</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="3_1">题型3：反向引用</h4>
+<p><strong>题目：</strong>用反向引用写一个正则表达式，匹配重复的单词</p>
+<div class="codehilite"><pre><span></span><code>输入：&quot;the the cat&quot;
+应该匹配：&quot;the the&quot;
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b(\w+)\s+\1\b&#39;</span>
+
+<span class="c1"># 解释：</span>
+\<span class="n">b</span>     <span class="err">←</span> <span class="n">单词边界</span><span class="err">（</span><span class="n">确保是完整单词</span><span class="err">）</span>
+<span class="p">(</span>\<span class="n">w</span><span class="o">+</span><span class="p">)</span>  <span class="err">←</span> <span class="n">第1组</span><span class="err">：</span><span class="n">第一个单词</span>
+\<span class="n">s</span><span class="o">+</span>    <span class="err">←</span> <span class="n">至少1个空格</span>
+\<span class="mi">1</span>     <span class="err">←</span> <span class="n">反向引用</span><span class="err">：</span><span class="n">必须匹配第1组的内容</span>
+\<span class="n">b</span>     <span class="err">←</span> <span class="n">单词边界</span>
+
+<span class="c1"># 测试</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;the the cat and and dog&quot;</span>
+<span class="n">matches</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>  <span class="c1"># [&#39;the&#39;, &#39;and&#39;]</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="4ttr">题型4：计算TTR</h4>
+<p><strong>题目：</strong></p>
+<p>给定tweets：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">tweets</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;I love Python&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;I LOVE coding&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Python is great&quot;</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>计算：
+1. 无预处理的TTR（用<code>.split()</code>分词）
+2. 小写后的TTR</p>
+<details>
+<summary>答案</summary>
+
+**1. 无预处理：**
+
+<div class="codehilite"><pre><span></span><code><span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">:</span>
+    <span class="n">tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tweet</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+<span class="c1"># tokens = [&#39;I&#39;, &#39;love&#39;, &#39;Python&#39;, &#39;I&#39;, &#39;LOVE&#39;, &#39;coding&#39;, &#39;Python&#39;, &#39;is&#39;, &#39;great&#39;]</span>
+<span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># {&#39;I&#39;, &#39;love&#39;, &#39;Python&#39;, &#39;LOVE&#39;, &#39;coding&#39;, &#39;is&#39;, &#39;great&#39;}</span>
+
+<span class="n">num_types</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="n">num_tokens</span> <span class="o">=</span> <span class="mi">9</span>
+<span class="n">TTR</span> <span class="o">=</span> <span class="mi">7</span><span class="o">/</span><span class="mi">9</span> <span class="o">=</span> <span class="mf">0.778</span>
+</code></pre></div>
+
+
+
+**2. 小写后：**
+
+<div class="codehilite"><pre><span></span><code><span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">tweets</span><span class="p">:</span>
+    <span class="n">tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tweet</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+<span class="c1"># tokens = [&#39;i&#39;, &#39;love&#39;, &#39;python&#39;, &#39;i&#39;, &#39;love&#39;, &#39;coding&#39;, &#39;python&#39;, &#39;is&#39;, &#39;great&#39;]</span>
+<span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># {&#39;i&#39;, &#39;love&#39;, &#39;python&#39;, &#39;coding&#39;, &#39;is&#39;, &#39;great&#39;}</span>
+
+<span class="n">num_types</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># &#39;LOVE&#39;和&#39;love&#39;合并了</span>
+<span class="n">num_tokens</span> <span class="o">=</span> <span class="mi">9</span>
+<span class="n">TTR</span> <span class="o">=</span> <span class="mi">6</span><span class="o">/</span><span class="mi">9</span> <span class="o">=</span> <span class="mf">0.667</span>
+</code></pre></div>
+
+
+
+**结论：**小写转换使TTR下降
+</details>
+
+<hr />
+<h4 id="5twitter">题型5：Twitter预处理</h4>
+<p><strong>题目：</strong>写正则表达式把所有@mentions替换成<code>&lt;MENTIONS&gt;</code></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Hey @user1 and @user2, check this out!&quot;</span>
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;@[a-zA-Z0-9_]+&quot;</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="s2">&quot;&lt;MENTIONS&gt;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="c1"># &quot;Hey &lt;MENTIONS&gt; and &lt;MENTIONS&gt;, check this out!&quot;</span>
+
+<span class="c1"># 解释：</span>
+<span class="o">@</span>              <span class="err">←</span> <span class="o">@</span> <span class="n">符号</span>
+<span class="p">[</span><span class="n">a</span><span class="o">-</span><span class="n">zA</span><span class="o">-</span><span class="n">Z0</span><span class="o">-</span><span class="mi">9</span><span class="n">_</span><span class="p">]</span><span class="o">+</span>  <span class="err">←</span> <span class="mi">1</span><span class="n">个或多个字母</span><span class="err">、</span><span class="n">数字</span><span class="err">、</span><span class="n">下划线</span>
+</code></pre></div>
+
+
+
+**更严格的版本（Twitter用户名限制15字符）：**
+
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;@[a-zA-Z0-9_]{1,15}&quot;</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h2 id="_14">八、记忆口诀</h2>
+<h3 id="_15">贪婪与非贪婪</h3>
+<div class="codehilite"><pre><span></span><code>星号贪婪吃到底，
+问号节制刚刚好，
+HTML标签分不清，
+加个问号解烦恼。
+</code></pre></div>
+
+<h3 id="_16">反向引用</h3>
+<div class="codehilite"><pre><span></span><code>括号捕获第一组，
+反斜数字再引用，
+开闭标签要配对，
+\1帮你来把关。
+</code></pre></div>
+
+<h3 id="_17">文本预处理</h3>
+<div class="codehilite"><pre><span></span><code>大写小写要统一，
+标点符号需分离，
+Twitter元素标准化，
+TTR越低越好记。
+</code></pre></div>
+
+<hr />
+<h2 id="_18">九、常见错误</h2>
+<h3 id="1_3">❌ 错误1：忘记用非贪婪匹配</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;.*&gt;&#39;</span>  <span class="c1"># 匹配整个字符串</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;&lt;b&gt;text&lt;/b&gt;&lt;/p&gt;&quot;</span>
+<span class="c1"># 结果：&lt;p&gt;&lt;b&gt;text&lt;/b&gt;&lt;/p&gt;  ← 不是我们想要的！</span>
+
+<span class="c1"># 正确</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;.*?&gt;&#39;</span>  <span class="c1"># 非贪婪</span>
+<span class="c1"># 结果：&lt;p&gt;, &lt;b&gt;, &lt;/b&gt;, &lt;/p&gt;  ← 每个标签单独匹配</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2raw-string">❌ 错误2：反向引用不用raw string</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;&lt;(\w+)&gt;(.*?)&lt;/</span><span class="se">\1</span><span class="s1">&gt;&#39;</span>
+<span class="c1"># Python会尝试解释 \1 作为转义字符（报错）</span>
+
+<span class="c1"># 正确</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&lt;(\w+)&gt;(.*?)&lt;/\1&gt;&#39;</span>
+<span class="c1"># r&#39;...&#39; 保留 \1 作为正则表达式的反向引用</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_2">❌ 错误3：捕获组和非捕获组混淆</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;don&#39;t&quot;</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\w+(?:&#39;\w+)?&quot;</span>
+
+<span class="c1"># 执行</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>  <span class="c1"># &quot;don&#39;t&quot;  ← 整个匹配</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># 错误！没有group(1)</span>
+
+<span class="c1"># (?:...) 是非捕获组，不会被编号</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4ttr_1">❌ 错误4：TTR计算忘记排除标点</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;Python&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;!&#39;</span><span class="p">]</span>
+<span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># 5个（包括标点）</span>
+<span class="n">TTR</span> <span class="o">=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">5</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="err">←</span> <span class="n">不准确</span><span class="err">！</span>
+
+<span class="c1"># 正确</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;[a-zA-Z0-9]+&quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">)]</span>
+<span class="c1"># [&#39;I&#39;, &#39;love&#39;, &#39;Python&#39;]</span>
+<span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>  <span class="c1"># 3个</span>
+<span class="n">TTR</span> <span class="o">=</span> <span class="mi">3</span><span class="o">/</span><span class="mi">3</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="err">←</span> <span class="n">准确</span><span class="err">！</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_19">十、扩展知识</h2>
+<h3 id="1-unicode">1. Unicode属性（高级）</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 匹配所有汉字</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;[\u4e00-\u9fff]+&#39;</span>
+
+<span class="c1"># 匹配所有emoji</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;[\U0001F600-\U0001F64F]+&#39;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2-verbose">2. Verbose模式（让正则表达式更易读）</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 不用verbose（难读）</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(?:[A-Z]\.)+|\w+(?:-\w+)*|\$?\d+(?:\.\d+)?%?|\.\.\.|\[.,;&quot;</span><span class="se">\&#39;</span><span class="s1">?():_`-]&#39;</span>
+
+<span class="c1"># 用verbose（易读）</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&#39;&#39;(?x)</span>
+<span class="s1">    (?:[A-Z]\.)+        # 缩写，如 U.S.A.</span>
+<span class="s1">  | \w+(?:-\w+)*        # 带连字符的词</span>
+<span class="s1">  | \$?\d+(?:\.\d+)?%?  # 货币和百分比</span>
+<span class="s1">  | \.\.\.              # 省略号</span>
+<span class="s1">  | [].,;&quot;&#39;?():_`-]     # 标点</span>
+<span class="s1">&#39;&#39;&#39;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_3">3. 实际应用场景</h3>
+<p><strong>场景1：提取所有邮箱</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b&#39;</span>
+</code></pre></div>
+
+<p><strong>场景2：验证电话号码</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;^\+?1?\d{9,15}$&#39;</span>
+</code></pre></div>
+
+<p><strong>场景3：清理HTML</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">clean_text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&lt;[^&gt;]+&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">html_text</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<p><strong>祝你考试顺利！</strong> 🎉</p>
+<p><strong>Lecture 5核心要点：</strong>
+- 贪婪vs非贪婪：<code>.*</code> vs <code>.*?</code>
+- 字符类取反：<code>[^&gt;]+</code>
+- 反向引用：<code>\1</code>, <code>\2</code>（必须用<code>r'...'</code>）
+- 前瞻断言：<code>(?=...)</code>
+- 非捕获组：<code>(?:...)</code>
+- TTR = Types / Tokens
+- 预处理降低TTR，有利于机器学习</p>
+<p><strong>记住：</strong>理解每个符号的含义，能手工模拟匹配过程！</p>
+    </div>
+</body>
+</html>

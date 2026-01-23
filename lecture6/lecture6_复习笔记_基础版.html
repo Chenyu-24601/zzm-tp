@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 6 复习笔记 - 情感分析</title>
+    <style>
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #e74c3c;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        h4 {
+            color: #666;
+        }
+        code {
+            background-color: #f8f8f8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Courier New", Consolas, monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        blockquote {
+            border-left: 4px solid #e74c3c;
+            padding-left: 20px;
+            margin-left: 0;
+            color: #555;
+            background-color: #f9f9f9;
+            padding: 10px 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #e74c3c;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 30px 0;
+        }
+        details {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .formula {
+            background-color: #f0f7ff;
+            padding: 10px;
+            border-left: 3px solid #3498db;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="lecture-6-sentiment-analysis">Lecture 6 超基础复习笔记 - 情感分析（Sentiment Analysis）</h1>
+<h2 id="_1">零、先理解问题（什么是情感分析？）</h2>
+<h3 id="_2">什么是情感分析？</h3>
+<p><strong>定义：</strong>判断一段文本表达的情感是正面、负面还是中性</p>
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">文本1</span><span class="err">：</span><span class="ss">&quot;I ❤ flying @VirginAmerica.&quot;</span>
+<span class="n">情感</span><span class="err">：</span><span class="n">正面</span><span class="err">（</span><span class="n">positive</span><span class="err">）</span><span class="w"> </span><span class="err">✅</span>
+
+<span class="n">文本2</span><span class="err">：</span><span class="ss">&quot;@SouthwestAir are you hiring for flight attendants right now?&quot;</span>
+<span class="n">情感</span><span class="err">：</span><span class="n">中性</span><span class="err">（</span><span class="n">neutral</span><span class="err">）</span><span class="w"> </span><span class="err">😐</span>
+
+<span class="n">文本3</span><span class="err">：</span><span class="ss">&quot;@united I&#39;m rebooked now, but the line was 300 people deep.&quot;</span>
+<span class="n">情感</span><span class="err">：</span><span class="n">负面</span><span class="err">（</span><span class="n">negative</span><span class="err">）</span><span class="w"> </span><span class="err">❌</span>
+</code></pre></div>
+
+<h3 id="_3">为什么重要？</h3>
+<p><strong>应用场景：</strong></p>
+<ol>
+<li>
+<p><strong>商业分析</strong>
+   <code>分析客户对产品的评价
+   → 了解产品优缺点
+   → 改进产品和服务</code></p>
+</li>
+<li>
+<p><strong>社交媒体监控</strong>
+   <code>分析用户对品牌的态度
+   → 及时发现公关危机
+   → 了解市场趋势</code></p>
+</li>
+<li>
+<p><strong>政治分析</strong>
+   <code>分析选民对候选人的情感
+   → 预测选举结果</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="lecture-6">一、Lecture 6的两种方法</h2>
+<h3 id="1pmipointwise-mutual-information">方法1：基于PMI（Pointwise Mutual Information）</h3>
+<p><strong>核心思想：</strong>看词语和积极/消极词的共现关系</p>
+<div class="codehilite"><pre><span></span><code>&quot;great&quot; 经常和积极词一起出现 → 积极
+&quot;terrible&quot; 经常和消极词一起出现 → 消极
+</code></pre></div>
+
+<hr />
+<h3 id="2gradable-method">方法2：基于词典的可评分方法（Gradable Method）</h3>
+<p><strong>核心思想：</strong>每个词都有一个情感分数</p>
+<div class="codehilite"><pre><span></span><code>&quot;love&quot; → +3.5（很积极）
+&quot;like&quot; → +1.2（较积极）
+&quot;hate&quot; → -3.8（很消极）
+
+句子情感分数 = 所有词的分数总和
+</code></pre></div>
+
+<hr />
+<h2 id="pmi">二、PMI方法详解</h2>
+<h3 id="1-pmi">1. PMI的定义</h3>
+<p><strong>公式：</strong></p>
+<div class="codehilite"><pre><span></span><code>PMI(x, y) = log₂( P(x,y) / (P(x) × P(y)) )
+
+其中：
+- P(x,y) = x和y共现的概率
+- P(x) = x出现的概率
+- P(y) = y出现的概率
+</code></pre></div>
+
+<p><strong>通俗理解：</strong></p>
+<div class="codehilite"><pre><span></span><code>PMI衡量：两个词一起出现的频率，是否高于&quot;随机&quot;情况
+
+PMI &gt; 0：比随机情况更常一起出现（正相关）
+PMI = 0：和随机情况一样（不相关）
+PMI &lt; 0：比随机情况更少一起出现（负相关）
+</code></pre></div>
+
+<hr />
+<h3 id="2-pmi">2. 为什么用PMI？</h3>
+<p><strong>问题：</strong>如何判断一个词是积极还是消极？</p>
+<p><strong>传统方法：</strong>人工标注词典（费时费力）</p>
+<p><strong>PMI方法：</strong>自动从语料库学习</p>
+<div class="codehilite"><pre><span></span><code>步骤：
+1. 准备一些明确的积极词：love, great, fantastic
+2. 准备一些明确的消极词：hate, bad, terrible
+3. 对于任意词w，计算：
+   - PMI(w, 积极词)
+   - PMI(w, 消极词)
+4. 比较两者，判断w的极性
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>词：&quot;excellent&quot;
+
+计算：
+PMI(&quot;excellent&quot;, &quot;love&quot;) = 2.5  ← 高
+PMI(&quot;excellent&quot;, &quot;hate&quot;) = -1.2 ← 低
+
+结论：&quot;excellent&quot; 更倾向于积极
+</code></pre></div>
+
+<hr />
+<h3 id="3">3. 概率估计（用频率代替概率）</h3>
+<p><strong>理论公式：</strong></p>
+<div class="codehilite"><pre><span></span><code>PMI(x, y) = log₂( P(x,y) / (P(x) × P(y)) )
+</code></pre></div>
+
+<p><strong>实际计算：</strong></p>
+<div class="codehilite"><pre><span></span><code>P(x) ≈ C(x) / N
+P(y) ≈ C(y) / N
+P(x,y) ≈ C(x,y) / N
+
+其中：
+- C(x) = 包含词x的推文数量
+- C(y) = 包含词y的推文数量
+- C(x,y) = 同时包含x和y的推文数量
+- N = 推文总数
+</code></pre></div>
+
+<p><strong>代入：</strong></p>
+<div class="codehilite"><pre><span></span><code>PMI(x, y) = log₂( (C(x,y)/N) / ((C(x)/N) × (C(y)/N)) )
+          = log₂( C(x,y) × N / (C(x) × C(y)) )
+</code></pre></div>
+
+<hr />
+<h3 id="4">4. 手工计算示例</h3>
+<p><strong>数据：</strong></p>
+<div class="codehilite"><pre><span></span><code>总推文数 N = 1000
+
+&quot;love&quot; 出现在 100 条推文中
+&quot;JetBlue&quot; 出现在 200 条推文中
+&quot;love&quot; 和 &quot;JetBlue&quot; 共现在 50 条推文中
+</code></pre></div>
+
+<p><strong>计算：</strong></p>
+<div class="codehilite"><pre><span></span><code>C(love) = 100
+C(JetBlue) = 200
+C(love, JetBlue) = 50
+N = 1000
+
+PMI(love, JetBlue) = log₂( 50 × 1000 / (100 × 200) )
+                   = log₂( 50000 / 20000 )
+                   = log₂( 2.5 )
+                   ≈ 1.32
+</code></pre></div>
+
+<p><strong>解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>PMI = 1.32 &gt; 0
+→ &quot;love&quot; 和 &quot;JetBlue&quot; 正相关
+→ &quot;JetBlue&quot; 有积极倾向
+</code></pre></div>
+
+<hr />
+<h3 id="5">5. 代码实现</h3>
+<h4 id="1pmi">第1步：定义PMI函数</h4>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">PMI</span><span class="p">(</span><span class="n">c_xy</span><span class="p">,</span> <span class="n">c_x</span><span class="p">,</span> <span class="n">c_y</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    计算PMI(x, y)</span>
+
+<span class="sd">    参数：</span>
+<span class="sd">    c_xy：x和y共现的次数</span>
+<span class="sd">    c_x：x出现的次数</span>
+<span class="sd">    c_y：y出现的次数</span>
+<span class="sd">    N：总观测数（推文总数）</span>
+
+<span class="sd">    返回：</span>
+<span class="sd">    PMI值</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># 计算概率</span>
+    <span class="n">p_xy</span> <span class="o">=</span> <span class="n">c_xy</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">p_x</span> <span class="o">=</span> <span class="n">c_x</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">p_y</span> <span class="o">=</span> <span class="n">c_y</span> <span class="o">/</span> <span class="n">N</span>
+
+    <span class="c1"># 计算PMI</span>
+    <span class="n">pmi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span> <span class="n">p_xy</span> <span class="o">/</span> <span class="p">(</span><span class="n">p_x</span> <span class="o">*</span> <span class="n">p_y</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pmi</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 例子数据</span>
+<span class="n">c_xy</span> <span class="o">=</span> <span class="mi">50</span>   <span class="c1"># love和JetBlue共现50次</span>
+<span class="n">c_x</span> <span class="o">=</span> <span class="mi">100</span>   <span class="c1"># love出现100次</span>
+<span class="n">c_y</span> <span class="o">=</span> <span class="mi">200</span>   <span class="c1"># JetBlue出现200次</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>    <span class="c1"># 总共1000条推文</span>
+
+<span class="c1"># 计算概率</span>
+<span class="n">p_xy</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">/</span> <span class="mi">1000</span> <span class="o">=</span> <span class="mf">0.05</span>      <span class="c1"># 共现概率</span>
+<span class="n">p_x</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">/</span> <span class="mi">1000</span> <span class="o">=</span> <span class="mf">0.1</span>       <span class="c1"># love概率</span>
+<span class="n">p_y</span> <span class="o">=</span> <span class="mi">200</span> <span class="o">/</span> <span class="mi">1000</span> <span class="o">=</span> <span class="mf">0.2</span>       <span class="c1"># JetBlue概率</span>
+
+<span class="c1"># 计算PMI</span>
+<span class="n">pmi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span> <span class="mf">0.05</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span> <span class="mf">0.05</span> <span class="o">/</span> <span class="mf">0.02</span> <span class="p">)</span>
+    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span> <span class="mf">2.5</span> <span class="p">)</span>
+    <span class="o">=</span> <span class="mf">1.32</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2">第2步：统计词频</h4>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">defaultdict</span>
+
+<span class="c1"># 出现次数统计</span>
+<span class="n">occ_counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+
+<span class="c1"># 共现次数统计（两层字典）</span>
+<span class="n">cooc_counts</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Counter</span><span class="p">)</span>
+
+<span class="c1"># 积极词列表</span>
+<span class="n">pos_words</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;love&quot;</span><span class="p">,</span> <span class="s2">&quot;great&quot;</span><span class="p">,</span> <span class="s2">&quot;like&quot;</span><span class="p">]</span>
+
+<span class="c1"># 消极词列表</span>
+<span class="n">neg_words</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;hate&quot;</span><span class="p">,</span> <span class="s2">&quot;bad&quot;</span><span class="p">,</span> <span class="s2">&quot;annoy&quot;</span><span class="p">]</span>
+
+<span class="c1"># 目标公司列表</span>
+<span class="n">companies</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;@virginamerica&quot;</span><span class="p">,</span> <span class="s2">&quot;@united&quot;</span><span class="p">,</span> <span class="s2">&quot;@southwestair&quot;</span><span class="p">]</span>
+
+<span class="c1"># 情感词 = 积极词 + 消极词</span>
+<span class="n">sentiment_words</span> <span class="o">=</span> <span class="n">pos_words</span> <span class="o">+</span> <span class="n">neg_words</span>
+</code></pre></div>
+
+<p><strong>数据结构解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># occ_counts：单个词的出现次数</span>
+<span class="n">occ_counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+<span class="c1"># 例如：</span>
+<span class="c1"># occ_counts[&#39;love&#39;] = 100</span>
+<span class="c1"># occ_counts[&#39;@jetblue&#39;] = 200</span>
+
+<span class="c1"># cooc_counts：共现次数（两层字典）</span>
+<span class="n">cooc_counts</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Counter</span><span class="p">)</span>
+<span class="c1"># 第1层：公司名</span>
+<span class="c1"># 第2层：情感词 → 共现次数</span>
+<span class="c1"># 例如：</span>
+<span class="c1"># cooc_counts[&#39;@jetblue&#39;][&#39;love&#39;] = 50</span>
+<span class="c1"># cooc_counts[&#39;@jetblue&#39;][&#39;hate&#39;] = 10</span>
+</code></pre></div>
+
+<hr />
+<h4 id="3_1">第3步：统计数据</h4>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 读取CSV文件</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;Tweets_short.csv&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># 转小写</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+<span class="c1"># 总推文数</span>
+<span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+<span class="c1"># 遍历每条推文</span>
+<span class="k">for</span> <span class="n">sentiment</span><span class="p">,</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># 分词（去重）</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tweet</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+    <span class="c1"># 统计所有词的出现次数</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="n">occ_counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># 只统计公司和情感词的共现</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">companies</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">word2</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">word2</span> <span class="ow">in</span> <span class="n">sentiment_words</span><span class="p">:</span>
+                    <span class="n">cooc_counts</span><span class="p">[</span><span class="n">word</span><span class="p">][</span><span class="n">word2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<p><strong>为什么用 <code>set()</code>？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tweet</span> <span class="o">=</span> <span class="s2">&quot;I love love love @jetblue&quot;</span>
+<span class="n">words_list</span> <span class="o">=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>  <span class="c1"># [&#39;I&#39;, &#39;love&#39;, &#39;love&#39;, &#39;love&#39;, &#39;@jetblue&#39;]</span>
+<span class="n">words_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">words_list</span><span class="p">)</span>  <span class="c1"># {&#39;I&#39;, &#39;love&#39;, &#39;@jetblue&#39;}</span>
+
+<span class="c1"># 用set去重的原因：</span>
+<span class="c1"># 我们只关心&quot;love&quot;和&quot;@jetblue&quot;是否在同一条推文中</span>
+<span class="c1"># 不关心&quot;love&quot;出现了几次</span>
+</code></pre></div>
+
+<p><strong>统计逻辑：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 假设推文：&quot;I love @jetblue it&#39;s great&quot;</span>
+<span class="n">words</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;@jetblue&#39;</span><span class="p">,</span> <span class="s2">&quot;it&#39;s&quot;</span><span class="p">,</span> <span class="s1">&#39;great&#39;</span><span class="p">}</span>
+
+<span class="c1"># 第1个循环：统计所有词的出现</span>
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="n">occ_counts</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># 结果：</span>
+<span class="c1"># occ_counts[&#39;i&#39;] += 1</span>
+<span class="c1"># occ_counts[&#39;love&#39;] += 1</span>
+<span class="c1"># occ_counts[&#39;@jetblue&#39;] += 1</span>
+<span class="c1"># occ_counts[&quot;it&#39;s&quot;] += 1</span>
+<span class="c1"># occ_counts[&#39;great&#39;] += 1</span>
+
+<span class="c1"># 第2个循环：统计共现</span>
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">companies</span><span class="p">:</span>  <span class="c1"># 只处理公司名</span>
+        <span class="c1"># word = &#39;@jetblue&#39;</span>
+        <span class="k">for</span> <span class="n">word2</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">word2</span> <span class="ow">in</span> <span class="n">sentiment_words</span><span class="p">:</span>  <span class="c1"># 只处理情感词</span>
+                <span class="c1"># word2 = &#39;love&#39; 或 &#39;great&#39;</span>
+                <span class="n">cooc_counts</span><span class="p">[</span><span class="n">word</span><span class="p">][</span><span class="n">word2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># 结果：</span>
+<span class="c1"># cooc_counts[&#39;@jetblue&#39;][&#39;love&#39;] += 1</span>
+<span class="c1"># cooc_counts[&#39;@jetblue&#39;][&#39;great&#39;] += 1</span>
+</code></pre></div>
+
+<hr />
+<h4 id="4pmi">第4步：计算PMI并判断情感</h4>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 对每个公司</span>
+<span class="k">for</span> <span class="n">company</span> <span class="ow">in</span> <span class="n">companies</span><span class="p">:</span>
+    <span class="n">company_count</span> <span class="o">=</span> <span class="n">occ_counts</span><span class="p">[</span><span class="n">company</span><span class="p">]</span>
+
+    <span class="c1"># 存储积极PMI和消极PMI</span>
+    <span class="n">posPMIs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">negPMIs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># 计算和积极词的PMI</span>
+    <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pos_words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">cooc_counts</span><span class="p">[</span><span class="n">company</span><span class="p">]:</span>  <span class="c1"># 检查是否共现</span>
+            <span class="n">pmi</span> <span class="o">=</span> <span class="n">PMI</span><span class="p">(</span><span class="n">cooc_counts</span><span class="p">[</span><span class="n">company</span><span class="p">][</span><span class="n">pos</span><span class="p">],</span>
+                     <span class="n">company_count</span><span class="p">,</span>
+                     <span class="n">occ_counts</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span>
+                     <span class="n">N</span><span class="p">)</span>
+            <span class="n">posPMIs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pmi</span><span class="p">)</span>
+
+    <span class="c1"># 计算和消极词的PMI</span>
+    <span class="k">for</span> <span class="n">neg</span> <span class="ow">in</span> <span class="n">neg_words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">neg</span> <span class="ow">in</span> <span class="n">cooc_counts</span><span class="p">[</span><span class="n">company</span><span class="p">]:</span>
+            <span class="n">pmi</span> <span class="o">=</span> <span class="n">PMI</span><span class="p">(</span><span class="n">cooc_counts</span><span class="p">[</span><span class="n">company</span><span class="p">][</span><span class="n">neg</span><span class="p">],</span>
+                     <span class="n">company_count</span><span class="p">,</span>
+                     <span class="n">occ_counts</span><span class="p">[</span><span class="n">neg</span><span class="p">],</span>
+                     <span class="n">N</span><span class="p">)</span>
+            <span class="n">negPMIs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pmi</span><span class="p">)</span>
+
+    <span class="c1"># 计算平均PMI</span>
+    <span class="n">avg_pos</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">posPMIs</span><span class="p">)</span>
+    <span class="n">avg_neg</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">negPMIs</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">company</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">avg_pos</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (pos), </span><span class="si">{</span><span class="n">avg_neg</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (neg)&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 假设数据：</span>
+<span class="n">company</span> <span class="o">=</span> <span class="s1">&#39;@jetblue&#39;</span>
+<span class="n">occ_counts</span><span class="p">[</span><span class="s1">&#39;@jetblue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
+
+<span class="n">pos_words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;great&#39;</span><span class="p">,</span> <span class="s1">&#39;like&#39;</span><span class="p">]</span>
+<span class="n">occ_counts</span><span class="p">[</span><span class="s1">&#39;love&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">occ_counts</span><span class="p">[</span><span class="s1">&#39;great&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="n">occ_counts</span><span class="p">[</span><span class="s1">&#39;like&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">150</span>
+
+<span class="n">cooc_counts</span><span class="p">[</span><span class="s1">&#39;@jetblue&#39;</span><span class="p">][</span><span class="s1">&#39;love&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">cooc_counts</span><span class="p">[</span><span class="s1">&#39;@jetblue&#39;</span><span class="p">][</span><span class="s1">&#39;great&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">cooc_counts</span><span class="p">[</span><span class="s1">&#39;@jetblue&#39;</span><span class="p">][</span><span class="s1">&#39;like&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">60</span>
+
+<span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c1"># 计算PMI</span>
+<span class="n">PMI_love</span> <span class="o">=</span> <span class="n">PMI</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+         <span class="o">=</span> <span class="n">log</span><span class="err">₂</span><span class="p">(</span><span class="mi">50</span> <span class="err">×</span> <span class="mi">1000</span> <span class="o">/</span> <span class="p">(</span><span class="mi">200</span> <span class="err">×</span> <span class="mi">100</span><span class="p">))</span>
+         <span class="o">=</span> <span class="n">log</span><span class="err">₂</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+         <span class="o">=</span> <span class="mf">1.32</span>
+
+<span class="n">PMI_great</span> <span class="o">=</span> <span class="n">PMI</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+          <span class="o">=</span> <span class="n">log</span><span class="err">₂</span><span class="p">(</span><span class="mi">30</span> <span class="err">×</span> <span class="mi">1000</span> <span class="o">/</span> <span class="p">(</span><span class="mi">200</span> <span class="err">×</span> <span class="mi">80</span><span class="p">))</span>
+          <span class="o">=</span> <span class="n">log</span><span class="err">₂</span><span class="p">(</span><span class="mf">1.875</span><span class="p">)</span>
+          <span class="o">=</span> <span class="mf">0.91</span>
+
+<span class="n">PMI_like</span> <span class="o">=</span> <span class="n">PMI</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+         <span class="o">=</span> <span class="n">log</span><span class="err">₂</span><span class="p">(</span><span class="mi">60</span> <span class="err">×</span> <span class="mi">1000</span> <span class="o">/</span> <span class="p">(</span><span class="mi">200</span> <span class="err">×</span> <span class="mi">150</span><span class="p">))</span>
+         <span class="o">=</span> <span class="n">log</span><span class="err">₂</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+         <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="c1"># 平均PMI</span>
+<span class="n">avg_pos</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.32</span> <span class="o">+</span> <span class="mf">0.91</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">=</span> <span class="mf">1.08</span>
+
+<span class="c1"># 同样计算neg_words的PMI...</span>
+<span class="n">avg_neg</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="c1"># 输出</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;@jetblue: 1.08 (pos), -0.5 (neg)&quot;</span><span class="p">)</span>
+<span class="c1"># 结论：@jetblue整体偏向积极（1.08 &gt; -0.5）</span>
+</code></pre></div>
+
+<hr />
+<h3 id="6-pmi">6. PMI的意义</h3>
+<p><strong>PMI值的解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>PMI &gt; 0：正相关
+  → 两个词一起出现的频率，高于随机情况
+  → 有某种联系
+
+PMI = 0：不相关
+  → 两个词一起出现的频率，等于随机情况
+  → 没有特殊联系
+
+PMI &lt; 0：负相关
+  → 两个词一起出现的频率，低于随机情况
+  → 互相排斥
+</code></pre></div>
+
+<p><strong>在情感分析中：</strong></p>
+<div class="codehilite"><pre><span></span><code>PMI(公司, 积极词) 高 → 公司评价积极
+PMI(公司, 消极词) 高 → 公司评价消极
+
+比较两者的平均值，判断整体情感
+</code></pre></div>
+
+<hr />
+<h2 id="gradable-method">三、可评分方法（Gradable Method）</h2>
+<h3 id="1">1. 核心思想</h3>
+<p><strong>方法：</strong>给每个词分配一个情感分数</p>
+<div class="codehilite"><pre><span></span><code>范围：-4（极度消极）到 +4（极度积极）
+
+例子：
+&quot;excellent&quot; → +3.5
+&quot;good&quot;      → +2.0
+&quot;ok&quot;        → +0.5
+&quot;bad&quot;       → -2.0
+&quot;terrible&quot;  → -3.5
+</code></pre></div>
+
+<p><strong>句子情感：</strong></p>
+<div class="codehilite"><pre><span></span><code>句子情感分数 = Σ 每个词的情感分数
+
+例如：
+&quot;The food is excellent&quot;
+= 0 + 0 + 0 + 3.5  （只有&quot;excellent&quot;有分数）
+= 3.5（积极）
+
+&quot;The service is bad&quot;
+= 0 + 0 + 0 + (-2.0)
+= -2.0（消极）
+</code></pre></div>
+
+<hr />
+<h3 id="2-valence-lexicon">2. 情感词典（Valence Lexicon）</h3>
+<p><strong>来源：</strong>人工标注</p>
+<div class="codehilite"><pre><span></span><code>方法：
+1. 让10个人对每个词打分（-4到+4）
+2. 取平均值作为该词的情感分数
+</code></pre></div>
+
+<p><strong>文件格式：</strong><code>valence_lexicon_small.tsv</code></p>
+<div class="codehilite"><pre><span></span><code>word        Valence
+love        3.06
+good        2.52
+great       3.32
+hate        -2.79
+bad         -2.90
+terrible    -3.42
+</code></pre></div>
+
+<p><strong>读取代码：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 读取TSV文件</span>
+<span class="n">valence</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;valence_lexicon_small.tsv&quot;</span><span class="p">,</span>
+                      <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
+                      <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="s1">&#39;Valence&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+<span class="c1"># 结果是字典</span>
+<span class="c1"># valence = {</span>
+<span class="c1">#     &#39;love&#39;: 3.06,</span>
+<span class="c1">#     &#39;good&#39;: 2.52,</span>
+<span class="c1">#     &#39;great&#39;: 3.32,</span>
+<span class="c1">#     &#39;hate&#39;: -2.79,</span>
+<span class="c1">#     ...</span>
+<span class="c1"># }</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_2">3. 基础算法</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">classify_sentiment_basic</span><span class="p">(</span><span class="n">tweet</span><span class="p">,</span> <span class="n">valence</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    基础情感分类</span>
+
+<span class="sd">    参数：</span>
+<span class="sd">    tweet：推文文本</span>
+<span class="sd">    valence：情感词典（字典）</span>
+
+<span class="sd">    返回：</span>
+<span class="sd">    &#39;positive&#39;, &#39;neutral&#39;, 或 &#39;negative&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># 分词</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="c1"># 累加情感分数</span>
+    <span class="n">tweet_valence</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">valence</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">valence</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+
+    <span class="c1"># 根据阈值分类</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+    <span class="k">if</span> <span class="n">tweet_valence</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;positive&#39;</span>
+    <span class="k">elif</span> <span class="n">tweet_valence</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">threshold</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;negative&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;neutral&#39;</span>
+</code></pre></div>
+
+<p><strong>执行示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tweet</span> <span class="o">=</span> <span class="s2">&quot;I love this airline it&#39;s great&quot;</span>
+<span class="n">valence</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;love&#39;</span><span class="p">:</span> <span class="mf">3.06</span><span class="p">,</span>
+    <span class="s1">&#39;great&#39;</span><span class="p">:</span> <span class="mf">3.32</span><span class="p">,</span>
+    <span class="c1"># ... 其他词</span>
+<span class="p">}</span>
+
+<span class="c1"># 分词</span>
+<span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;this&#39;</span><span class="p">,</span> <span class="s1">&#39;airline&#39;</span><span class="p">,</span> <span class="s2">&quot;it&#39;s&quot;</span><span class="p">,</span> <span class="s1">&#39;great&#39;</span><span class="p">]</span>
+
+<span class="c1"># 累加</span>
+<span class="n">tweet_valence</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="c1"># &#39;i&#39; 不在词典 → 跳过</span>
+<span class="c1"># &#39;love&#39; 在词典 → tweet_valence += 3.06</span>
+<span class="n">tweet_valence</span> <span class="o">=</span> <span class="mf">3.06</span>
+<span class="c1"># &#39;this&#39; 不在词典 → 跳过</span>
+<span class="c1"># &#39;airline&#39; 不在词典 → 跳过</span>
+<span class="c1"># &quot;it&#39;s&quot; 不在词典 → 跳过</span>
+<span class="c1"># &#39;great&#39; 在词典 → tweet_valence += 3.32</span>
+<span class="n">tweet_valence</span> <span class="o">=</span> <span class="mf">3.06</span> <span class="o">+</span> <span class="mf">3.32</span> <span class="o">=</span> <span class="mf">6.38</span>
+
+<span class="c1"># 分类</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="mf">6.38</span> <span class="o">&gt;</span> <span class="mf">0.05</span>  <span class="c1"># True</span>
+<span class="err">→</span> <span class="s1">&#39;positive&#39;</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4-threshold">4. 阈值（Threshold）的作用</h3>
+<p><strong>问题：</strong>情感分数接近0时如何分类？</p>
+<div class="codehilite"><pre><span></span><code>例子：
+tweet_valence = 0.01  ← 几乎是中性，但稍微积极
+应该分类为 &#39;positive&#39; 还是 &#39;neutral&#39;？
+</code></pre></div>
+
+<p><strong>解决方案：</strong>设置阈值</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">05</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nv">valence</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">+</span><span class="mi">0</span>.<span class="mi">05</span>:
+<span class="w">    </span>→<span class="w"> </span><span class="nv">positive</span>
+<span class="nv">elif</span><span class="w"> </span><span class="nv">valence</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="o">-</span><span class="mi">0</span>.<span class="mi">05</span>:
+<span class="w">    </span>→<span class="w"> </span><span class="nv">negative</span>
+<span class="k">else</span>:<span class="w">  </span>#<span class="w"> </span><span class="o">-</span><span class="mi">0</span>.<span class="mi">05</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nv">valence</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="o">+</span><span class="mi">0</span>.<span class="mi">05</span>
+<span class="w">    </span>→<span class="w"> </span><span class="nv">neutral</span>
+</code></pre></div>
+
+<p><strong>图示：</strong></p>
+<div class="codehilite"><pre><span></span><code>        -0.05        0        +0.05
+  --------|----------|----------|--------
+  negative  neutral    neutral   positive
+  ←────────|←────────→|─────────→
+</code></pre></div>
+
+<p><strong>阈值的影响：</strong></p>
+<div class="codehilite"><pre><span></span><code>threshold = 0.01（小阈值）
+→ neutral范围窄
+→ 更多推文被分类为positive/negative
+→ 分类更&quot;敏感&quot;
+
+threshold = 1.0（大阈值）
+→ neutral范围宽
+→ 更多推文被分类为neutral
+→ 分类更&quot;保守&quot;
+</code></pre></div>
+
+<hr />
+<h3 id="5_1">5. 高级特性</h3>
+<h4 id="1_1">特性1：否定词处理</h4>
+<p><strong>问题：</strong></p>
+<div class="codehilite"><pre><span></span><code>&quot;I love this&quot;        → positive ✅
+&quot;I don&#39;t love this&quot;  → 也是positive？❌（错了！）
+</code></pre></div>
+
+<p><strong>解决方案：</strong>识别否定词，反转情感</p>
+<div class="codehilite"><pre><span></span><code><span class="n">negation_words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;not&#39;</span><span class="p">,</span> <span class="s2">&quot;don&#39;t&quot;</span><span class="p">,</span> <span class="s2">&quot;didn&#39;t&quot;</span><span class="p">,</span> <span class="s2">&quot;never&quot;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">]</span>
+
+<span class="c1"># 修改算法</span>
+<span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">valence</span><span class="p">:</span>
+        <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">valence</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">negation_words</span><span class="p">:</span>
+        <span class="n">tweet_valence</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">0.8</span>  <span class="c1"># 反转并减弱</span>
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">tweet</span> <span class="o">=</span> <span class="s2">&quot;I don&#39;t love this&quot;</span>
+<span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s2">&quot;don&#39;t&quot;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;this&#39;</span><span class="p">]</span>
+
+<span class="n">tweet_valence</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="c1"># &#39;i&#39; → 跳过</span>
+<span class="c1"># &quot;don&#39;t&quot; → 否定词</span>
+<span class="n">tweet_valence</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">0.8</span>  <span class="c1"># 0 * -0.8 = 0</span>
+<span class="c1"># &#39;love&#39; → valence[&#39;love&#39;] = 3.06</span>
+<span class="n">tweet_valence</span> <span class="o">+=</span> <span class="mf">3.06</span>  <span class="c1"># 0 + 3.06 = 3.06</span>
+<span class="c1"># 但前面有否定词，最终应该是负的</span>
+
+<span class="c1"># 更好的实现：</span>
+<span class="n">tweet_valence</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">negation_flag</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">negation_words</span><span class="p">:</span>
+        <span class="n">negation_flag</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">valence</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">negation_flag</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="o">-</span><span class="n">valence</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.8</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">valence</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+
+<span class="c1"># 结果：</span>
+<span class="c1"># &quot;don&#39;t&quot; → negation_flag = True</span>
+<span class="c1"># &#39;love&#39; → tweet_valence += -3.06 * 0.8 = -2.45</span>
+<span class="c1"># 最终：tweet_valence = -2.45（负面）✅</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2strengthening-words">特性2：加强词（Strengthening Words）</h4>
+<p><strong>作用：</strong>增强情感强度</p>
+<div class="codehilite"><pre><span></span><code>&quot;good&quot;      → +2.0
+&quot;very good&quot; → +2.0 + 0.5 = +2.5（更积极）
+</code></pre></div>
+
+<p><strong>加强词列表：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">strengthen_words</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;very&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s1">&#39;really&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s1">&#39;extremely&#39;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="s1">&#39;absolutely&#39;</span><span class="p">:</span> <span class="mf">0.8</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>算法：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">valence</span><span class="p">:</span>
+        <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">valence</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">strengthen_words</span><span class="p">:</span>
+        <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">strengthen_words</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+</code></pre></div>
+
+<hr />
+<h4 id="3weakening-words">特性3：减弱词（Weakening Words）</h4>
+<p><strong>作用：</strong>减弱情感强度</p>
+<div class="codehilite"><pre><span></span><code>&quot;good&quot;          → +2.0
+&quot;somewhat good&quot; → +2.0 - 0.3 = +1.7（较不积极）
+</code></pre></div>
+
+<p><strong>减弱词列表：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">weaken_words</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;somewhat&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="s1">&#39;slightly&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="s1">&#39;barely&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.5</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h4 id="4_1">特性4：感叹号</h4>
+<p><strong>作用：</strong>增强情感</p>
+<div class="codehilite"><pre><span></span><code>&quot;Great&quot;    → +3.32
+&quot;Great!&quot;   → +3.32 + 0.1 = +3.42
+&quot;Great!!!&quot; → +3.32 + 0.3 = +3.62
+</code></pre></div>
+
+<p><strong>实现：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">exclamation_words</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;!&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="s1">&#39;!!&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="s1">&#39;!!!&#39;</span><span class="p">:</span> <span class="mf">0.3</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="6">6. 完整算法</h3>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">classify_sentiment_advanced</span><span class="p">(</span><span class="n">tweet</span><span class="p">,</span> <span class="n">valence</span><span class="p">,</span>
+                               <span class="n">negation_words</span><span class="p">,</span>
+                               <span class="n">strengthen_words</span><span class="p">,</span>
+                               <span class="n">weaken_words</span><span class="p">,</span>
+                               <span class="n">exclamation_words</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    高级情感分类（考虑否定、加强、减弱等）</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">tweet_valence</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="c1"># 基础情感分数</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">valence</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">valence</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+
+        <span class="c1"># 否定词</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">negation_words</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">0.8</span>
+
+        <span class="c1"># 感叹号</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">exclamation_words</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">exclamation_words</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+
+        <span class="c1"># 加强词</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">strengthen_words</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">strengthen_words</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+
+        <span class="c1"># 减弱词</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weaken_words</span><span class="p">:</span>
+            <span class="n">tweet_valence</span> <span class="o">+=</span> <span class="n">weaken_words</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+
+    <span class="c1"># 分类</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="k">if</span> <span class="n">tweet_valence</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;positive&#39;</span>
+    <span class="k">elif</span> <span class="n">tweet_valence</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">threshold</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;negative&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;neutral&#39;</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_4">四、评估指标</h2>
+<h3 id="1-confusion-matrix">1. 混淆矩阵（Confusion Matrix）</h3>
+<p><strong>定义：</strong>对比真实标签和预测标签</p>
+<div class="codehilite"><pre><span></span><code>            预测
+           pos  neu  neg
+真  pos  [  50   10    5 ]
+实  neu  [  10  100   15 ]
+    neg  [   3   12   60 ]
+</code></pre></div>
+
+<p><strong>含义：</strong></p>
+<div class="codehilite"><pre><span></span><code>第1行：真实是positive的65个样本
+  - 50个预测正确（pos → pos）
+  - 10个预测错误（pos → neu）
+  - 5个预测错误（pos → neg）
+
+第2行：真实是neutral的125个样本
+  - 10个预测为pos
+  - 100个预测正确
+  - 15个预测为neg
+
+第3行：真实是negative的75个样本
+  - 3个预测为pos
+  - 12个预测为neu
+  - 60个预测正确
+</code></pre></div>
+
+<hr />
+<h3 id="2-accuracy">2. 准确率（Accuracy）</h3>
+<p><strong>公式：</strong></p>
+<div class="codehilite"><pre><span></span><code>准确率 = 正确预测的数量 / 总数量
+       = (对角线元素之和) / (所有元素之和)
+</code></pre></div>
+
+<p><strong>计算示例：</strong></p>
+<div class="codehilite"><pre><span></span><code>混淆矩阵：
+            pos  neu  neg
+       pos [50   10    5]
+       neu [10  100   15]
+       neg [ 3   12   60]
+
+正确预测 = 50 + 100 + 60 = 210
+总数 = 65 + 125 + 75 = 265
+
+准确率 = 210 / 265 = 0.792 = 79.2%
+</code></pre></div>
+
+<hr />
+<h3 id="3_3">3. 代码实现</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># 初始化混淆矩阵（3×3）</span>
+<span class="n">cm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="c1"># 情感标签到数字的映射</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">s2id</span><span class="p">(</span><span class="n">sentiment</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">sentiment</span> <span class="o">==</span> <span class="s2">&quot;positive&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">sentiment</span> <span class="o">==</span> <span class="s2">&quot;neutral&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">sentiment</span> <span class="o">==</span> <span class="s2">&quot;negative&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">2</span>
+
+<span class="c1"># 遍历每条推文</span>
+<span class="k">for</span> <span class="n">true_sentiment</span><span class="p">,</span> <span class="n">tweet</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># 预测情感</span>
+    <span class="n">pred_sentiment</span> <span class="o">=</span> <span class="n">classify_sentiment</span><span class="p">(</span><span class="n">tweet</span><span class="p">)</span>
+
+    <span class="c1"># 更新混淆矩阵</span>
+    <span class="n">cm</span><span class="p">[</span><span class="n">s2id</span><span class="p">(</span><span class="n">true_sentiment</span><span class="p">)][</span><span class="n">s2id</span><span class="p">(</span><span class="n">pred_sentiment</span><span class="p">)]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># 计算准确率</span>
+<span class="n">accuracy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accuracy: </span><span class="si">{</span><span class="n">accuracy</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># 打印混淆矩阵</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 假设预测结果：</span>
+<span class="n">true_sentiment</span> <span class="o">=</span> <span class="s1">&#39;positive&#39;</span>
+<span class="n">pred_sentiment</span> <span class="o">=</span> <span class="s1">&#39;neutral&#39;</span>
+
+<span class="c1"># 更新混淆矩阵</span>
+<span class="n">true_id</span> <span class="o">=</span> <span class="n">s2id</span><span class="p">(</span><span class="s1">&#39;positive&#39;</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">pred_id</span> <span class="o">=</span> <span class="n">s2id</span><span class="p">(</span><span class="s1">&#39;neutral&#39;</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">cm</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># 表示：真实是positive，预测为neutral</span>
+
+<span class="c1"># 混淆矩阵的含义：</span>
+<span class="c1"># cm[i][j] = 真实标签为i，预测标签为j的数量</span>
+
+<span class="c1"># np.trace(cm)：对角线元素之和</span>
+<span class="c1"># 例如：cm[0][0] + cm[1][1] + cm[2][2]</span>
+<span class="c1"># 这些是预测正确的样本</span>
+
+<span class="c1"># np.sum(cm)：所有元素之和（总样本数）</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_5">五、完整执行流程</h2>
+<h3 id="pmi_1">PMI方法流程</h3>
+<div class="codehilite"><pre><span></span><code>步骤1：准备数据
+  ├─ 读取tweets CSV文件
+  ├─ 转小写
+  └─ 定义积极词、消极词、目标公司
+
+步骤2：统计词频
+  ├─ 统计每个词的出现次数（occ_counts）
+  └─ 统计公司和情感词的共现次数（cooc_counts）
+
+步骤3：计算PMI
+  ├─ 对每个公司
+  │  ├─ 计算和积极词的PMI
+  │  └─ 计算和消极词的PMI
+  └─ 求平均值
+
+步骤4：判断情感
+  └─ 比较avg_pos和avg_neg
+</code></pre></div>
+
+<hr />
+<h3 id="_6">可评分方法流程</h3>
+<div class="codehilite"><pre><span></span><code>步骤1：准备数据
+  ├─ 读取tweets CSV文件
+  ├─ 读取情感词典
+  └─ 读取否定词、加强词等列表
+
+步骤2：对每条推文
+  ├─ 分词
+  ├─ 累加情感分数
+  ├─ 处理否定、加强、减弱等
+  └─ 根据阈值分类
+
+步骤3：评估
+  ├─ 构建混淆矩阵
+  ├─ 计算准确率
+  └─ 可视化结果
+</code></pre></div>
+
+<hr />
+<h2 id="_7">六、两种方法的对比</h2>
+<h3 id="pmi_2">PMI方法</h3>
+<p><strong>优点：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">无需人工标注词典</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">能发现意想不到的关联</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">适合分析整体情感</span><span class="err">（</span><span class="n">公司</span><span class="err">、</span><span class="n">产品等</span><span class="err">）</span>
+</code></pre></div>
+
+<p><strong>缺点：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">需要大量数据</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">只能判断整体</span><span class="err">，</span><span class="n">不能逐句分类</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">依赖种子词</span><span class="err">（</span><span class="n">积极词和消极词列表</span><span class="err">）</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_8">可评分方法</h3>
+<p><strong>优点：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">可以对每条推文分类</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">可以处理复杂语言现象</span><span class="err">（</span><span class="n">否定</span><span class="err">、</span><span class="n">加强等</span><span class="err">）</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">结果可解释</span><span class="err">（</span><span class="n">可以看每个词的贡献</span><span class="err">）</span>
+</code></pre></div>
+
+<p><strong>缺点：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">需要人工标注的情感词典</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">词典覆盖不全的词无法处理</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">简单相加可能不准确</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_9">七、纸笔考试重点</h2>
+<h3 id="_10">必须掌握</h3>
+<h4 id="1-pmi_1">1. ✅ <strong>PMI的定义和计算</strong></h4>
+<div class="codehilite"><pre><span></span><code>公式：
+PMI(x,y) = log₂( P(x,y) / (P(x) × P(y)) )
+        = log₂( (C(x,y) × N) / (C(x) × C(y)) )
+
+能手工计算给定数据的PMI值
+</code></pre></div>
+
+<h4 id="2-pmi_1">2. ✅ <strong>PMI值的意义</strong></h4>
+<div class="codehilite"><pre><span></span><code>PMI &gt; 0：正相关（一起出现比随机多）
+PMI = 0：不相关
+PMI &lt; 0：负相关（一起出现比随机少）
+</code></pre></div>
+
+<h4 id="3_4">3. ✅ <strong>可评分方法的原理</strong></h4>
+<div class="codehilite"><pre><span></span><code>句子情感 = Σ 词的情感分数
+根据阈值分类为positive/neutral/negative
+</code></pre></div>
+
+<h4 id="4_2">4. ✅ <strong>混淆矩阵</strong></h4>
+<div class="codehilite"><pre><span></span><code>能读懂混淆矩阵
+能计算准确率 = 对角线之和 / 总和
+</code></pre></div>
+
+<h4 id="5_2">5. ✅ <strong>特殊词的处理</strong></h4>
+<div class="codehilite"><pre><span></span><code>否定词：反转情感
+加强词：增强情感
+减弱词：减弱情感
+感叹号：增强情感
+</code></pre></div>
+
+<hr />
+<h3 id="_11">可能的考题</h3>
+<h4 id="1pmi_1">题型1：计算PMI</h4>
+<p><strong>题目：</strong>给定以下数据，计算PMI(excellent, restaurant)</p>
+<div class="codehilite"><pre><span></span><code>总推文数：N = 10,000
+&quot;excellent&quot; 出现：500次
+&quot;restaurant&quot; 出现：1,000次
+两者共现：150次
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>C(excellent) = 500
+C(restaurant) = 1,000
+C(excellent, restaurant) = 150
+N = 10,000
+
+PMI = log₂( (C(x,y) × N) / (C(x) × C(y)) )
+    = log₂( (150 × 10,000) / (500 × 1,000) )
+    = log₂( 1,500,000 / 500,000 )
+    = log₂( 3 )
+    ≈ 1.585
+</code></pre></div>
+
+
+
+**解释：**PMI = 1.585 > 0，说明"excellent"和"restaurant"正相关
+</details>
+
+<hr />
+<h4 id="2pmi">题型2：PMI的意义</h4>
+<p><strong>题目：</strong>解释以下PMI值的含义</p>
+<div class="codehilite"><pre><span></span><code><span class="n">PMI</span><span class="p">(</span><span class="n">love</span><span class="p">,</span><span class="w"> </span><span class="nv">@JetBlue</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.5</span>
+<span class="n">PMI</span><span class="p">(</span><span class="n">hate</span><span class="p">,</span><span class="w"> </span><span class="nv">@JetBlue</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">0.5</span>
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+**PMI(love, @JetBlue) = 2.5 > 0：**
+- "love"和"@JetBlue"正相关
+- 它们一起出现的频率，远高于随机情况
+- 说明人们经常在提到@JetBlue时使用"love"
+- 暗示@JetBlue有积极评价
+
+**PMI(hate, @JetBlue) = -0.5 < 0：**
+- "hate"和"@JetBlue"负相关
+- 它们一起出现的频率，低于随机情况
+- 说明人们在提到@JetBlue时很少使用"hate"
+- 进一步支持@JetBlue评价积极的结论
+
+**综合判断：**
+- 积极PMI（2.5）远大于消极PMI（-0.5）
+- @JetBlue的整体情感是积极的
+</details>
+
+<hr />
+<h4 id="3_5">题型3：可评分方法分类</h4>
+<p><strong>题目：</strong>使用可评分方法对以下推文分类</p>
+<div class="codehilite"><pre><span></span><code>推文：&quot;I really love this airline!&quot;
+情感词典：
+  love → +3.0
+  really → +0.5（加强词）
+  ! → +0.1（感叹号）
+
+阈值：threshold = 0.5
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>分词：[&#39;i&#39;, &#39;really&#39;, &#39;love&#39;, &#39;this&#39;, &#39;airline&#39;, &#39;!&#39;]
+
+计算情感分数：
+tweet_valence = 0
+<span class="k">-</span> &#39;i&#39; → 不在词典，跳过
+<span class="k">-</span> &#39;really&#39; → 加强词，tweet_valence += 0.5 = 0.5
+<span class="k">-</span> &#39;love&#39; → 情感词，tweet_valence += 3.0 = 3.5
+<span class="k">-</span> &#39;this&#39; → 不在词典，跳过
+<span class="k">-</span> &#39;airline&#39; → 不在词典，跳过
+<span class="k">-</span> &#39;!&#39; → 感叹号，tweet_valence += 0.1 = 3.6
+
+最终：tweet_valence = 3.6
+
+分类：
+threshold = 0.5
+3.6 &gt; 0.5  # True
+→ 分类为 &#39;positive&#39;
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="4_3">题型4：否定词处理</h4>
+<p><strong>题目：</strong>考虑否定词后，以下推文应该分类为什么？</p>
+<div class="codehilite"><pre><span></span><code>推文：&quot;I don&#39;t hate it&quot;
+情感词典：
+  hate → -3.0
+否定词列表：[&quot;don&#39;t&quot;]
+否定规则：遇到否定词，将后续情感分数乘以-0.8
+
+阈值：threshold = 0.5
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+**方法1：简单实现（不准确）**
+
+<div class="codehilite"><pre><span></span><code>tweet_valence = 0
+<span class="k">-</span> &#39;i&#39; → 跳过
+<span class="k">-</span> &quot;don&#39;t&quot; → 否定词，tweet_valence *= -0.8 = 0
+<span class="k">-</span> &#39;hate&#39; → tweet_valence += (-3.0) = -3.0
+<span class="k">-</span> &#39;it&#39; → 跳过
+
+tweet_valence = -3.0
+→ 分类为 &#39;negative&#39;（错误！）
+</code></pre></div>
+
+
+
+**方法2：正确实现**
+
+<div class="codehilite"><pre><span></span><code>tweet_valence = 0
+negation_flag = False
+
+<span class="k">-</span> &#39;i&#39; → 跳过
+<span class="k">-</span> &quot;don&#39;t&quot; → negation_flag = True
+<span class="k">-</span> &#39;hate&#39; →
+  if negation_flag:
+    tweet_valence += -(-3.0) * 0.8 = +2.4
+  否定反转：hate是负面，否定后变正面
+<span class="k">-</span> &#39;it&#39; → 跳过
+
+tweet_valence = 2.4
+2.4 &gt; 0.5
+→ 分类为 &#39;positive&#39;（正确！）
+
+解释：&quot;不讨厌&quot;表示&quot;还不错&quot;，是正面情感
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="5_3">题型5：混淆矩阵和准确率</h4>
+<p><strong>题目：</strong>给定混淆矩阵，计算准确率</p>
+<div class="codehilite"><pre><span></span><code>           预测
+         pos neu neg
+真  pos [ 40  10   5]
+实  neu [  5  80  10]
+    neg [  2   8  50]
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>准确率 = 对角线之和 / 总和
+       = (40 + 80 + 50) / (所有元素之和)
+
+总和 = 40+10+5 + 5+80+10 + 2+8+50
+     = 55 + 95 + 60
+     = 210
+
+准确率 = 170 / 210
+       = 0.810
+       = 81.0%
+</code></pre></div>
+
+
+
+**额外分析：**
+
+<div class="codehilite"><pre><span></span><code>Positive类别：
+  真实55个，预测正确40个
+  准确率 = 40/55 = 72.7%
+
+Neutral类别：
+  真实95个，预测正确80个
+  准确率 = 80/95 = 84.2%
+
+Negative类别：
+  真实60个，预测正确50个
+  准确率 = 50/60 = 83.3%
+
+观察：Neutral和Negative预测较好，Positive较差
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h2 id="python">八、Python库和函数</h2>
+<h3 id="1-collections">1. Collections</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">defaultdict</span>
+
+<span class="c1"># Counter：计数字典</span>
+<span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">])</span>
+<span class="c1"># Counter({&#39;a&#39;: 3, &#39;b&#39;: 2, &#39;c&#39;: 1})</span>
+
+<span class="n">counter</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1"># [(&#39;a&#39;, 3), (&#39;b&#39;, 2)]  ← 返回最常见的2个</span>
+
+<span class="c1"># defaultdict：默认值字典</span>
+<span class="n">dd</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Counter</span><span class="p">)</span>
+<span class="n">dd</span><span class="p">[</span><span class="s1">&#39;key1&#39;</span><span class="p">][</span><span class="s1">&#39;subkey&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 自动创建Counter</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2-pandas">2. Pandas</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 读取CSV</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;file.csv&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># 读取TSV</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;file.tsv&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># 转小写</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+<span class="c1"># 遍历</span>
+<span class="k">for</span> <span class="n">sentiment</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sentiment</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+
+<span class="c1"># 转字典</span>
+<span class="n">valence</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Valence&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3-numpy">3. NumPy</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># 对数</span>
+<span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>  <span class="c1"># 3.0</span>
+
+<span class="c1"># 矩阵</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>  <span class="c1"># 3×3零矩阵</span>
+
+<span class="c1"># 对角线之和</span>
+<span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+
+<span class="c1"># 所有元素之和</span>
+<span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+
+<span class="c1"># 平均值</span>
+<span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>  <span class="c1"># 2.0</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_12">九、记忆口诀</h2>
+<h3 id="pmi_3">PMI方法</h3>
+<div class="codehilite"><pre><span></span><code>共现频率看关联，
+PMI计算要记全，
+对数公式莫搞混，
+正负零值分得清。
+</code></pre></div>
+
+<h3 id="_13">可评分方法</h3>
+<div class="codehilite"><pre><span></span><code>词典分数来判断，
+阈值设置很关键，
+否定反转要注意，
+加强减弱别忘记。
+</code></pre></div>
+
+<h3 id="_14">混淆矩阵</h3>
+<div class="codehilite"><pre><span></span><code>对角线上是正确，
+其他格子是错误，
+总和一除得准确，
+三类分开算精度。
+</code></pre></div>
+
+<hr />
+<h2 id="_15">十、常见错误</h2>
+<h3 id="1pmi_2">❌ 错误1：PMI计算公式错误</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">PMI</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">c_xy</span> <span class="o">/</span> <span class="p">(</span><span class="n">c_x</span> <span class="o">*</span> <span class="n">c_y</span><span class="p">))</span>  <span class="err">❌</span>
+<span class="c1"># 忘记乘N，忘记log的底数</span>
+
+<span class="c1"># 正确</span>
+<span class="n">PMI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">((</span><span class="n">c_xy</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">c_x</span> <span class="o">*</span> <span class="n">c_y</span><span class="p">))</span>  <span class="err">✅</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_1">❌ 错误2：共现统计不去重</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">tweet</span> <span class="o">=</span> <span class="s2">&quot;I love love love @jetblue&quot;</span>
+<span class="n">words</span> <span class="o">=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>  <span class="c1"># [&#39;I&#39;, &#39;love&#39;, &#39;love&#39;, &#39;love&#39;, &#39;@jetblue&#39;]</span>
+<span class="c1"># love和@jetblue共现3次？❌</span>
+
+<span class="c1"># 正确</span>
+<span class="n">words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tweet</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>  <span class="c1"># {&#39;I&#39;, &#39;love&#39;, &#39;@jetblue&#39;}</span>
+<span class="c1"># love和@jetblue共现1次✅</span>
+<span class="c1"># 因为我们只关心是否在同一条推文中，不关心出现几次</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_6">❌ 错误3：阈值设置不合理</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 不合理</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 太小，没有neutral</span>
+<span class="c1"># 所有接近0的都被分为positive或negative</span>
+
+<span class="n">threshold</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># 太大，全是neutral</span>
+<span class="c1"># 只有极端情感才被分类</span>
+
+<span class="c1"># 合理</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># 适中</span>
+<span class="c1"># 给neutral留有空间，又不至于太宽</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4_4">❌ 错误4：混淆矩阵行列搞反</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">cm</span><span class="p">[</span><span class="n">pred_id</span><span class="p">][</span><span class="n">true_id</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="err">❌</span>
+<span class="c1"># 预测在行，真实在列（反了！）</span>
+
+<span class="c1"># 正确</span>
+<span class="n">cm</span><span class="p">[</span><span class="n">true_id</span><span class="p">][</span><span class="n">pred_id</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="err">✅</span>
+<span class="c1"># 真实在行，预测在列</span>
+
+<span class="c1"># 记忆：True Real（真实在行）</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_16">十一、扩展应用</h2>
+<h3 id="1_2">1. 多分类情感分析</h3>
+<div class="codehilite"><pre><span></span><code>除了positive/neutral/negative，还可以：
+- 5分类：very negative, negative, neutral, positive, very positive
+- 情绪分类：happy, sad, angry, fearful, surprised
+</code></pre></div>
+
+<hr />
+<h3 id="2-aspect-based-sentiment">2. 方面情感分析（Aspect-Based Sentiment）</h3>
+<div class="codehilite"><pre><span></span><code>不只判断整体情感，还要判断对具体方面的情感
+
+例如餐厅评论：
+&quot;The food is excellent but the service is terrible&quot;
+→ food: positive
+→ service: negative
+</code></pre></div>
+
+<hr />
+<h3 id="3_7">3. 实时情感监控</h3>
+<div class="codehilite"><pre><span></span><code>应用：
+1. 监控品牌声誉
+2. 跟踪产品发布反应
+3. 预警公关危机
+</code></pre></div>
+
+<hr />
+<p><strong>祝你考试顺利！</strong> 🎉</p>
+<p><strong>Lecture 6核心要点：</strong>
+- PMI公式：<code>log₂(C(x,y)×N / (C(x)×C(y)))</code>
+- PMI &gt; 0正相关，&lt; 0负相关
+- 可评分方法：累加词的情感分数
+- 阈值分类：positive &gt; threshold, negative &lt; -threshold
+- 否定词反转情感
+- 混淆矩阵评估：准确率 = 对角线和/总和</p>
+<p><strong>记住：</strong>理解PMI的数学含义，会手工计算！理解否定、加强等语言现象的处理方法！</p>
+    </div>
+</body>
+</html>

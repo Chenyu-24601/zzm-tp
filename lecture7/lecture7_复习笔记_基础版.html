@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 7 复习笔记 - 命名实体识别（NER）</title>
+    <style>
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #9b59b6;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #9b59b6;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        h4 {
+            color: #666;
+        }
+        code {
+            background-color: #f8f8f8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Courier New", Consolas, monospace;
+            font-size: 0.9em;
+            color: #9b59b6;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        blockquote {
+            border-left: 4px solid #9b59b6;
+            padding-left: 20px;
+            margin-left: 0;
+            color: #555;
+            background-color: #f9f9f9;
+            padding: 10px 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #9b59b6;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 30px 0;
+        }
+        details {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #9b59b6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="lecture-7-ner">Lecture 7 超基础复习笔记 - 命名实体识别（NER）</h1>
+<h2 id="_1">零、先理解问题（什么是命名实体识别？）</h2>
+<h3 id="named-entity">什么是命名实体（Named Entity）？</h3>
+<p><strong>定义：</strong>文本中具有特定意义的名称</p>
+<p><strong>常见类型：</strong></p>
+<div class="codehilite"><pre><span></span><code>人名（PERSON）：
+  - &quot;Rowan Atkinson&quot;
+  - &quot;Mike Pence&quot;
+
+地名（LOCATION）：
+  - &quot;Dutch&quot;（荷兰语的，指荷兰）
+  - &quot;British&quot;（英国的）
+
+组织名（ORGANIZATION）：
+  - &quot;BBC&quot;
+  - &quot;Google&quot;
+
+日期/时间（DATE/TIME）：
+  - &quot;January 20, 2017&quot;
+  - &quot;2013&quot;
+
+其他（MISC）：
+  - 语言名
+  - 货币
+  - 百分比
+</code></pre></div>
+
+<hr />
+<h3 id="ner">什么是命名实体识别（NER）？</h3>
+<p><strong>任务：</strong>在文本中自动识别并标注命名实体</p>
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>输入文本：
+&quot;British actor Rowan Atkinson, best known as &#39;Mr. Bean,&#39; has died.&quot;
+
+NER输出：
+British ← NORP（国籍/宗教/政治团体）
+Rowan Atkinson ← PERSON（人名）
+Mr. Bean ← PERSON（人名）
+</code></pre></div>
+
+<hr />
+<h3 id="_2">为什么重要？</h3>
+<p><strong>应用场景：</strong></p>
+<ol>
+<li>
+<p><strong>信息提取</strong>
+   <code>从新闻中提取：谁在哪里做了什么
+   → 构建知识图谱</code></p>
+</li>
+<li>
+<p><strong>问答系统</strong>
+   <code>问题："谁是英国首相？"
+   → 需要识别"英国"（地名）和"首相"（职位）</code></p>
+</li>
+<li>
+<p><strong>事实核查</strong>
+   <code>识别声明中提到的人物、地点
+   → 验证真实性</code></p>
+</li>
+<li>
+<p><strong>内容推荐</strong>
+   <code>识别用户关注的人物、地点
+   → 推荐相关内容</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="ner_1">一、两种NER方法</h2>
+<h3 id="1gazetteer">方法1：基于规则（Gazetteer）</h3>
+<p><strong>核心思想：</strong>使用预定义的实体列表进行匹配</p>
+<div class="codehilite"><pre><span></span><code>有一个国家列表：
+countries = [&quot;USA&quot;, &quot;UK&quot;, &quot;China&quot;, &quot;Brazil&quot;, ...]
+
+在文本中查找这些词
+→ 如果找到，标注为&quot;COUNTRY&quot;
+</code></pre></div>
+
+<p><strong>使用工具：</strong>GATE（General Architecture for Text Engineering）</p>
+<hr />
+<h3 id="2neural-network">方法2：基于机器学习（Neural Network）</h3>
+<p><strong>核心思想：</strong>训练神经网络模型自动学习实体特征</p>
+<div class="codehilite"><pre><span></span><code>训练数据：
+&quot;Barack Obama was born in Hawaii&quot; → Obama=PERSON, Hawaii=LOCATION
+
+模型学习：
+- 人名特征：通常是大写开头的连续词
+- 地名特征：通常跟在&quot;in&quot;, &quot;at&quot;等介词后
+</code></pre></div>
+
+<p><strong>使用工具：</strong>spaCy</p>
+<hr />
+<h2 id="gazetteergate">二、Gazetteer方法（GATE）</h2>
+<h3 id="1-gazetteer">1. 什么是Gazetteer？</h3>
+<p><strong>定义：</strong>地名词典，存储预定义实体的列表</p>
+<p><strong>通俗理解：</strong>一本"花名册"</p>
+<div class="codehilite"><pre><span></span><code>就像学校的学生名单：
+- 一班：张三、李四、王五
+- 二班：赵六、孙七、周八
+
+Gazetteer就是各种实体的名单：
+- 国家：USA, UK, China, ...
+- 语言：English, Chinese, Spanish, ...
+- 公司：Google, Microsoft, Apple, ...
+</code></pre></div>
+
+<hr />
+<h3 id="2-gazetteer">2. Gazetteer的结构</h3>
+<p><strong>基础结构：</strong></p>
+<div class="codehilite"><pre><span></span><code>实体名称 + 特征（可选）
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="gh">#</span> countries.csv
+Country,Code,WikiURL
+Brazil,BR,https://en.wikipedia.org/wiki/Brazil
+China,CN,https://en.wikipedia.org/wiki/China
+USA,US,https://en.wikipedia.org/wiki/United_States
+
+<span class="gh">#</span> languages.csv
+Language,WikiURL
+English,https://en.wikipedia.org/wiki/English_language
+Chinese,https://en.wikipedia.org/wiki/Chinese_language
+</code></pre></div>
+
+<hr />
+<h3 id="3-gazetteer">3. 创建Gazetteer</h3>
+<h4 id="1">步骤1：准备数据</h4>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># 读取国家列表</span>
+<span class="n">countries</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;countries.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 数据示例</span>
+<span class="c1">#   Country  Code</span>
+<span class="c1"># 0 Brazil   BR</span>
+<span class="c1"># 1 China    CN</span>
+<span class="c1"># 2 USA      US</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2wikipedia-url">步骤2：构建Wikipedia URL</h4>
+<p><strong>规则：</strong></p>
+<div class="codehilite"><pre><span></span><code>基础URL：https://en.wikipedia.org/wiki/
+完整URL：基础URL + 实体名称
+
+例子：
+Brazil → https://en.wikipedia.org/wiki/Brazil
+
+特殊情况（多个单词）：
+&quot;United States&quot; → https://en.wikipedia.org/wiki/United_States
+（空格替换为下划线）
+</code></pre></div>
+
+<p><strong>代码实现：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_wiki_url</span><span class="p">(</span><span class="n">entity_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    创建Wikipedia URL</span>
+
+<span class="sd">    参数：</span>
+<span class="sd">    entity_name：实体名称</span>
+
+<span class="sd">    返回：</span>
+<span class="sd">    Wikipedia URL</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># 替换空格为下划线</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">entity_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 构建URL</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://en.wikipedia.org/wiki/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">return</span> <span class="n">url</span>
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">create_wiki_url</span><span class="p">(</span><span class="s2">&quot;Brazil&quot;</span><span class="p">)</span>
+<span class="c1"># &#39;https://en.wikipedia.org/wiki/Brazil&#39;</span>
+
+<span class="n">create_wiki_url</span><span class="p">(</span><span class="s2">&quot;United States&quot;</span><span class="p">)</span>
+<span class="c1"># &#39;https://en.wikipedia.org/wiki/United_States&#39;</span>
+
+<span class="n">create_wiki_url</span><span class="p">(</span><span class="s2">&quot;Bosnia and Herzegovina&quot;</span><span class="p">)</span>
+<span class="c1"># &#39;https://en.wikipedia.org/wiki/Bosnia_and_Herzegovina&#39;</span>
+</code></pre></div>
+
+<hr />
+<h4 id="3gategazetteer">步骤3：使用GATE创建Gazetteer</h4>
+<p><strong>GATE的Gazetteer格式：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">gatenlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Document</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gatenlp.processing.gazetteer</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringGazetteer</span>
+
+<span class="c1"># 创建Gazetteer</span>
+<span class="n">gaz</span> <span class="o">=</span> <span class="n">StringGazetteer</span><span class="p">()</span>
+
+<span class="c1"># 添加实体</span>
+<span class="n">gaz</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;Brazil&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;BR&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">})</span>
+<span class="n">gaz</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;China&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;CN&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">})</span>
+<span class="n">gaz</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;USA&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;US&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">})</span>
+
+<span class="c1"># 或者从列表批量添加</span>
+<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">countries</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+    <span class="n">gaz</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Country&#39;</span><span class="p">],</span> <span class="p">{</span>
+        <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Code&#39;</span><span class="p">],</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;COUNTRY&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;wiki_url&quot;</span><span class="p">:</span> <span class="n">create_wiki_url</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Country&#39;</span><span class="p">])</span>
+    <span class="p">})</span>
+</code></pre></div>
+
+<hr />
+<h4 id="4gazetteer">步骤4：应用Gazetteer标注文本</h4>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 创建文档</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;British actor Rowan Atkinson has died.&quot;</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">Document</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<span class="c1"># 应用Gazetteer</span>
+<span class="n">gaz</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+
+<span class="c1"># 查看标注结果</span>
+<span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">annset</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;实体: </span><span class="si">{</span><span class="n">doc</span><span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">start</span><span class="p">:</span><span class="n">ann</span><span class="o">.</span><span class="n">end</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;类型: </span><span class="si">{</span><span class="n">ann</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;特征: </span><span class="si">{</span><span class="n">ann</span><span class="o">.</span><span class="n">features</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>输出示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="err">实体</span><span class="o">:</span><span class="w"> </span><span class="n">British</span>
+<span class="err">类型</span><span class="o">:</span><span class="w"> </span><span class="n">COUNTRY</span>
+<span class="err">特征</span><span class="o">:</span><span class="w"> </span><span class="o">{</span><span class="s1">&#39;code&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GB&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;wiki_url&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://en.wikipedia.org/wiki/United_Kingdom&#39;</span><span class="o">}</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4-gazetteer">4. Gazetteer的优缺点</h3>
+<p><strong>优点：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">简单直接</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">只需要准备列表</span>
+
+<span class="mf">2.</span><span class="w"> </span><span class="n">准确率高</span><span class="err">（</span><span class="n">对于列表中的实体</span><span class="err">）</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">完全匹配</span><span class="err">，</span><span class="n">不会出错</span>
+
+<span class="mf">3.</span><span class="w"> </span><span class="n">可控性强</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">可以随时添加</span><span class="o">/</span><span class="n">删除实体</span>
+
+<span class="mf">4.</span><span class="w"> </span><span class="n">无需训练</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">不需要标注数据</span>
+</code></pre></div>
+
+<p><strong>缺点：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">覆盖不全</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">只能识别列表中的实体</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">新实体无法识别</span>
+
+<span class="mf">2.</span><span class="w"> </span><span class="n">歧义问题</span>
+<span class="w">   </span><span class="n">例子</span><span class="err">：</span>
+<span class="w">   </span><span class="s">&quot;Washington&quot;</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">可能是人名</span><span class="err">（</span><span class="n">乔治</span><span class="err">·</span><span class="n">华盛顿</span><span class="err">）</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">可能是地名</span><span class="err">（</span><span class="n">华盛顿州</span><span class="err">、</span><span class="n">华盛顿特区</span><span class="err">）</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">Gazetteer无法区分</span>
+
+<span class="mf">3.</span><span class="w"> </span><span class="n">上下文问题</span>
+<span class="w">   </span><span class="n">例子</span><span class="err">：</span>
+<span class="w">   </span><span class="s">&quot;I like turkey&quot;</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="s">&quot;turkey&quot;</span><span class="n">可能是国家土耳其</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">也可能是火鸡肉</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">Gazetteer只看词</span><span class="err">，</span><span class="n">不看上下文</span>
+
+<span class="mf">4.</span><span class="w"> </span><span class="n">维护成本</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">需要不断更新列表</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">新的实体</span><span class="err">（</span><span class="n">新公司</span><span class="err">、</span><span class="n">新产品</span><span class="err">）</span><span class="n">需要手动添加</span>
+</code></pre></div>
+
+<hr />
+<h2 id="spacy">三、机器学习方法（spaCy）</h2>
+<h3 id="1-spacy">1. spaCy是什么？</h3>
+<p><strong>定义：</strong>一个现代的NLP库，使用神经网络进行文本处理</p>
+<p><strong>核心组件：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">Proc</span><span class="nv">essing</span><span class="w"> </span><span class="nv">Pipeline</span><span class="err">（处理流水线）：</span>
+
+<span class="err">文本</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="err">分词器</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="err">词性标注器</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="err">依存句法分析器</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nf">NER</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="err">输出</span>
+<span class="w">       </span><span class="err">(</span><span class="nf">Tokenizer</span><span class="p">)</span><span class="w">  </span><span class="p">(</span><span class="nv">POS</span><span class="w"> </span><span class="nv">Tagger</span><span class="p">)</span><span class="w">   </span><span class="p">(</span><span class="nv">Dependency</span><span class="w"> </span><span class="nv">Parser</span><span class="p">)</span><span class="w">  </span><span class="p">(</span><span class="nv">Named</span><span class="w"> </span><span class="nv">Entity</span><span class="w"> </span><span class="nv">Recognition</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>NER模型：</strong></p>
+<div class="codehilite"><pre><span></span><code>使用神经网络（深度学习）
+→ 自动学习实体的特征
+→ 不需要人工规则
+</code></pre></div>
+
+<hr />
+<h3 id="2-spacy">2. spaCy的基本使用</h3>
+<h4 id="1_1">步骤1：安装和加载模型</h4>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">spacy</span>
+
+<span class="c1"># 加载英语模型</span>
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">)</span>
+<span class="c1"># en_core_web_sm：英语小型模型</span>
+<span class="c1"># 其他选项：</span>
+<span class="c1"># - en_core_web_md：中型模型（更准确）</span>
+<span class="c1"># - en_core_web_lg：大型模型（最准确）</span>
+</code></pre></div>
+
+<hr />
+<h4 id="2">步骤2：处理文本</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;British actor Rowan Atkinson, best known as &#39;Mr. Bean,&#39; has died.&quot;</span>
+
+<span class="c1"># 处理文本</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<span class="c1"># doc是一个Document对象，包含了所有的标注信息</span>
+</code></pre></div>
+
+<hr />
+<h4 id="3">步骤3：提取实体</h4>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 遍历所有实体</span>
+<span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;实体: </span><span class="si">{</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;类型: </span><span class="si">{</span><span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;位置: </span><span class="si">{</span><span class="n">ent</span><span class="o">.</span><span class="n">start_char</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">ent</span><span class="o">.</span><span class="n">end_char</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>输出示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="err">实体</span><span class="o">:</span><span class="w"> </span><span class="n">British</span>
+<span class="err">类型</span><span class="o">:</span><span class="w"> </span><span class="n">NORP</span>
+<span class="err">位置</span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">7</span>
+
+<span class="err">实体</span><span class="o">:</span><span class="w"> </span><span class="n">Rowan</span><span class="w"> </span><span class="n">Atkinson</span>
+<span class="err">类型</span><span class="o">:</span><span class="w"> </span><span class="n">PERSON</span>
+<span class="err">位置</span><span class="o">:</span><span class="w"> </span><span class="mi">14</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">28</span>
+
+<span class="err">实体</span><span class="o">:</span><span class="w"> </span><span class="n">Mr</span><span class="o">.</span><span class="w"> </span><span class="n">Bean</span>
+<span class="err">类型</span><span class="o">:</span><span class="w"> </span><span class="n">PERSON</span>
+<span class="err">位置</span><span class="o">:</span><span class="w"> </span><span class="mi">48</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">56</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3-spacy">3. spaCy的实体类型</h3>
+<p><strong>常见类型：</strong></p>
+<table>
+<thead>
+<tr>
+<th>标签</th>
+<th>英文全称</th>
+<th>中文</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PERSON</strong></td>
+<td>Person</td>
+<td>人名</td>
+<td>Rowan Atkinson, Mike Pence</td>
+</tr>
+<tr>
+<td><strong>ORG</strong></td>
+<td>Organization</td>
+<td>组织/公司</td>
+<td>BBC, Google, United Nations</td>
+</tr>
+<tr>
+<td><strong>GPE</strong></td>
+<td>Geopolitical Entity</td>
+<td>地理政治实体</td>
+<td>London, USA, China</td>
+</tr>
+<tr>
+<td><strong>LOC</strong></td>
+<td>Location</td>
+<td>地点</td>
+<td>Pacific Ocean, Mount Everest</td>
+</tr>
+<tr>
+<td><strong>DATE</strong></td>
+<td>Date</td>
+<td>日期</td>
+<td>January 20, 2017, yesterday</td>
+</tr>
+<tr>
+<td><strong>TIME</strong></td>
+<td>Time</td>
+<td>时间</td>
+<td>3 PM, morning</td>
+</tr>
+<tr>
+<td><strong>MONEY</strong></td>
+<td>Money</td>
+<td>货币</td>
+<td>$100, £50</td>
+</tr>
+<tr>
+<td><strong>PERCENT</strong></td>
+<td>Percentage</td>
+<td>百分比</td>
+<td>50%, 3.5%</td>
+</tr>
+<tr>
+<td><strong>NORP</strong></td>
+<td>Nationalities/Religious/Political groups</td>
+<td>国籍/宗教/政治团体</td>
+<td>British, American, Muslim</td>
+</tr>
+<tr>
+<td><strong>FAC</strong></td>
+<td>Facility</td>
+<td>设施</td>
+<td>Brooklyn Bridge, Heathrow Airport</td>
+</tr>
+<tr>
+<td><strong>PRODUCT</strong></td>
+<td>Product</td>
+<td>产品</td>
+<td>iPhone, Windows 10</td>
+</tr>
+<tr>
+<td><strong>EVENT</strong></td>
+<td>Event</td>
+<td>事件</td>
+<td>World War II, Olympics</td>
+</tr>
+<tr>
+<td><strong>WORK_OF_ART</strong></td>
+<td>Work of Art</td>
+<td>艺术作品</td>
+<td>Hamlet, Mona Lisa</td>
+</tr>
+<tr>
+<td><strong>LAW</strong></td>
+<td>Law</td>
+<td>法律</td>
+<td>Constitution, Bill of Rights</td>
+</tr>
+<tr>
+<td><strong>LANGUAGE</strong></td>
+<td>Language</td>
+<td>语言</td>
+<td>English, Chinese</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="4">4. 完整示例</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">spacy</span>
+
+<span class="c1"># 加载模型</span>
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">)</span>
+
+<span class="c1"># 处理多条文本</span>
+<span class="n">texts</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;A video shows Dutch politician Tunahan Kuzu putting a grilled cheese in his pocket before an interview.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;British actor Rowan Atkinson, best known as &#39;Mr. Bean,&#39; has died.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Mike Pence once said that smoking doesn&#39;t kill people.&quot;</span>
+<span class="p">]</span>
+
+<span class="c1"># 分析每条文本</span>
+<span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">:</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;文本: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;实体:&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>输出：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="err">文本</span><span class="o">:</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="n">video</span><span class="w"> </span><span class="n">shows</span><span class="w"> </span><span class="n">Dutch</span><span class="w"> </span><span class="n">politician</span><span class="w"> </span><span class="n">Tunahan</span><span class="w"> </span><span class="n">Kuzu</span><span class="w"> </span><span class="n">putting</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">grilled</span><span class="w"> </span><span class="n">cheese</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">his</span><span class="w"> </span><span class="n">pocket</span><span class="w"> </span><span class="n">before</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">interview</span><span class="o">.</span>
+<span class="err">实体</span><span class="o">:</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Dutch</span><span class="w"> </span><span class="o">(</span><span class="n">NORP</span><span class="o">)</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Tunahan</span><span class="w"> </span><span class="n">Kuzu</span><span class="w"> </span><span class="o">(</span><span class="n">PERSON</span><span class="o">)</span>
+
+<span class="err">文本</span><span class="o">:</span><span class="w"> </span><span class="n">British</span><span class="w"> </span><span class="n">actor</span><span class="w"> </span><span class="n">Rowan</span><span class="w"> </span><span class="n">Atkinson</span><span class="o">,</span><span class="w"> </span><span class="n">best</span><span class="w"> </span><span class="n">known</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="s1">&#39;Mr. Bean,&#39;</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">died</span><span class="o">.</span>
+<span class="err">实体</span><span class="o">:</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">British</span><span class="w"> </span><span class="o">(</span><span class="n">NORP</span><span class="o">)</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Rowan</span><span class="w"> </span><span class="n">Atkinson</span><span class="w"> </span><span class="o">(</span><span class="n">PERSON</span><span class="o">)</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Mr</span><span class="o">.</span><span class="w"> </span><span class="n">Bean</span><span class="w"> </span><span class="o">(</span><span class="n">PERSON</span><span class="o">)</span>
+
+<span class="err">文本</span><span class="o">:</span><span class="w"> </span><span class="n">Mike</span><span class="w"> </span><span class="n">Pence</span><span class="w"> </span><span class="n">once</span><span class="w"> </span><span class="n">said</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">smoking</span><span class="w"> </span><span class="n">doesn</span><span class="err">&#39;</span><span class="n">t</span><span class="w"> </span><span class="n">kill</span><span class="w"> </span><span class="n">people</span><span class="o">.</span>
+<span class="err">实体</span><span class="o">:</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Mike</span><span class="w"> </span><span class="n">Pence</span><span class="w"> </span><span class="o">(</span><span class="n">PERSON</span><span class="o">)</span>
+</code></pre></div>
+
+<hr />
+<h3 id="5-pipeline">5. 自定义Pipeline（优化性能）</h3>
+<p><strong>问题：</strong>默认pipeline包含很多组件，但我们只需要NER</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 默认pipeline</span>
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">)</span>
+<span class="c1"># 包含：tok2vec, tagger, parser, ner, attribute_ruler, lemmatizer</span>
+
+<span class="c1"># 这些组件会消耗时间和内存</span>
+</code></pre></div>
+
+<p><strong>解决方案：</strong>只加载需要的组件</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 只加载tokenizer和ner</span>
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">,</span>
+                 <span class="n">disable</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tagger&quot;</span><span class="p">,</span> <span class="s2">&quot;parser&quot;</span><span class="p">,</span> <span class="s2">&quot;attribute_ruler&quot;</span><span class="p">,</span> <span class="s2">&quot;lemmatizer&quot;</span><span class="p">])</span>
+
+<span class="c1"># 或者明确指定要加载的组件</span>
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">,</span>
+                 <span class="n">disable</span><span class="o">=</span><span class="p">[</span><span class="n">pipe</span> <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="n">nlp</span><span class="o">.</span><span class="n">pipe_names</span> <span class="k">if</span> <span class="n">pipe</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;tok2vec&quot;</span><span class="p">,</span> <span class="s2">&quot;ner&quot;</span><span class="p">]])</span>
+</code></pre></div>
+
+<p><strong>效果：</strong></p>
+<div class="codehilite"><pre><span></span><code>加载速度：快 3-5 倍
+处理速度：快 2-3 倍
+内存占用：减少 50%
+</code></pre></div>
+
+<hr />
+<h2 id="_3">四、实体统计与可视化</h2>
+<h3 id="1_2">1. 统计每条文本的实体数量</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spacy</span>
+
+<span class="c1"># 加载数据</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;snopes.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 加载spaCy模型</span>
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tagger&quot;</span><span class="p">,</span> <span class="s2">&quot;parser&quot;</span><span class="p">])</span>
+
+<span class="c1"># 统计实体数量</span>
+<span class="n">entity_counts</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;claim&#39;</span><span class="p">]:</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">entity_counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">))</span>
+
+<span class="c1"># 添加到DataFrame</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;entity_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity_counts</span>
+
+<span class="c1"># 查看统计</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;entity_count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+</code></pre></div>
+
+<p><strong>输出示例：</strong></p>
+<div class="codehilite"><pre><span></span><code>count    500.0
+mean       2.3
+std        1.5
+min        0.0
+25%        1.0
+50%        2.0
+75%        3.0
+max        8.0
+</code></pre></div>
+
+<p><strong>解释：</strong>
+- 平均每条claim有2.3个实体
+- 最少0个，最多8个
+- 50%的claim有2个或更少实体</p>
+<hr />
+<h3 id="2_1">2. 绘制分布图</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="c1"># 绘制直方图</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;entity_count&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;entity_count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span>
+         <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Number of Entities per Claim&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Distribution of Entity Counts&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>图形示例：</strong></p>
+<div class="codehilite"><pre><span></span><code>     频率
+     ↑
+120  |    █
+100  |    █
+ 80  |    █  █
+ 60  |    █  █
+ 40  |    █  █  █
+ 20  |    █  █  █  █
+  0  |____█__█__█__█__█__█__█__█___
+          0  1  2  3  4  5  6  7  8  → 实体数量
+
+大部分claim有1-3个实体
+</code></pre></div>
+
+<hr />
+<h3 id="3_1">3. 统计最常见的实体</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+
+<span class="c1"># 收集所有实体</span>
+<span class="n">all_entities</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;claim&#39;</span><span class="p">]:</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+        <span class="n">all_entities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+<span class="c1"># 统计频率</span>
+<span class="n">entity_counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">all_entities</span><span class="p">)</span>
+
+<span class="c1"># 找出最常见的20个</span>
+<span class="n">top_20</span> <span class="o">=</span> <span class="n">entity_counter</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="c1"># 打印</span>
+<span class="k">for</span> <span class="n">entity</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">top_20</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entity</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>输出示例：</strong></p>
+<div class="codehilite"><pre><span></span><code>United States: 45
+Trump: 32
+Obama: 28
+Clinton: 25
+2016: 20
+New York: 18
+Facebook: 15
+Russia: 14
+...
+</code></pre></div>
+
+<hr />
+<h3 id="4_1">4. 按类型统计实体</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 收集实体及其类型</span>
+<span class="n">entity_type_counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;claim&#39;</span><span class="p">]:</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+        <span class="n">entity_type_counter</span><span class="p">[</span><span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># 打印统计</span>
+<span class="k">for</span> <span class="n">ent_type</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">entity_type_counter</span><span class="o">.</span><span class="n">most_common</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ent_type</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>输出示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">PERSON</span><span class="o">:</span><span class="w"> </span><span class="mi">250</span>
+<span class="n">GPE</span><span class="o">:</span><span class="w"> </span><span class="mi">180</span>
+<span class="n">DATE</span><span class="o">:</span><span class="w"> </span><span class="mi">120</span>
+<span class="n">ORG</span><span class="o">:</span><span class="w"> </span><span class="mi">95</span>
+<span class="n">NORP</span><span class="o">:</span><span class="w"> </span><span class="mi">60</span>
+<span class="n">MONEY</span><span class="o">:</span><span class="w"> </span><span class="mi">30</span>
+<span class="o">...</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_4">五、实体共现分析</h2>
+<h3 id="1_3">1. 什么是实体共现？</h3>
+<p><strong>定义：</strong>两个实体在同一条文本中出现</p>
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>文本：&quot;Donald Trump met Vladimir Putin in Moscow&quot;
+
+实体：
+- Donald Trump (PERSON)
+- Vladimir Putin (PERSON)
+- Moscow (GPE)
+
+共现对：
+- (Donald Trump, Vladimir Putin)
+- (Donald Trump, Moscow)
+- (Vladimir Putin, Moscow)
+</code></pre></div>
+
+<p><strong>意义：</strong></p>
+<div class="codehilite"><pre><span></span><code>共现频率高 → 两个实体关系密切
+
+例如：
+&quot;Obama&quot; 和 &quot;White House&quot; 经常共现
+→ Obama是前总统，在白宫工作过
+</code></pre></div>
+
+<hr />
+<h3 id="2_2">2. 提取共现关系</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+
+<span class="c1"># 收集所有共现对</span>
+<span class="n">cooccurrences</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;claim&#39;</span><span class="p">]:</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="c1"># 提取本文中的所有实体</span>
+    <span class="n">entities</span> <span class="o">=</span> <span class="p">[</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">]</span>
+
+    <span class="c1"># 如果少于2个实体，跳过</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+    <span class="c1"># 生成所有可能的实体对</span>
+    <span class="k">for</span> <span class="n">ent1</span><span class="p">,</span> <span class="n">ent2</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="c1"># 按字母顺序排序（确保(A,B)和(B,A)被认为是同一对）</span>
+        <span class="n">pair</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="n">ent1</span><span class="p">,</span> <span class="n">ent2</span><span class="p">]))</span>
+        <span class="n">cooccurrences</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># 打印最常见的共现对</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">ent1</span><span class="p">,</span> <span class="n">ent2</span><span class="p">),</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">cooccurrences</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ent1</span><span class="si">}</span><span class="s2"> &lt;-&gt; </span><span class="si">{</span><span class="n">ent2</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>详细解释：</strong></p>
+<p><strong><code>combinations</code> 函数：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+
+<span class="n">entities</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">]</span>
+
+<span class="c1"># 生成所有2个元素的组合</span>
+<span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+
+<span class="c1"># 输出：</span>
+<span class="c1"># (&#39;A&#39;, &#39;B&#39;)</span>
+<span class="c1"># (&#39;A&#39;, &#39;C&#39;)</span>
+<span class="c1"># (&#39;B&#39;, &#39;C&#39;)</span>
+
+<span class="c1"># 注意：不包括 (&#39;A&#39;, &#39;A&#39;), (&#39;B&#39;, &#39;B&#39;), (&#39;C&#39;, &#39;C&#39;)</span>
+<span class="c1"># 也不包括重复的，如 (&#39;B&#39;, &#39;A&#39;)（因为已经有(&#39;A&#39;, &#39;B&#39;)了）</span>
+</code></pre></div>
+
+<p><strong>为什么要排序？</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 假设有两条文本：</span>
+<span class="c1"># 文本1：&quot;Obama met Trump&quot;  → (Obama, Trump)</span>
+<span class="c1"># 文本2：&quot;Trump criticized Obama&quot;  → (Trump, Obama)</span>
+
+<span class="c1"># 不排序：</span>
+<span class="n">cooccurrences</span><span class="p">[(</span><span class="s1">&#39;Obama&#39;</span><span class="p">,</span> <span class="s1">&#39;Trump&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">cooccurrences</span><span class="p">[(</span><span class="s1">&#39;Trump&#39;</span><span class="p">,</span> <span class="s1">&#39;Obama&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># 两个不同的键！</span>
+
+<span class="c1"># 排序后：</span>
+<span class="n">pair1</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;Obama&#39;</span><span class="p">,</span> <span class="s1">&#39;Trump&#39;</span><span class="p">]))</span>  <span class="c1"># (&#39;Obama&#39;, &#39;Trump&#39;)</span>
+<span class="n">pair2</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;Trump&#39;</span><span class="p">,</span> <span class="s1">&#39;Obama&#39;</span><span class="p">]))</span>  <span class="c1"># (&#39;Obama&#39;, &#39;Trump&#39;)</span>
+<span class="n">cooccurrences</span><span class="p">[(</span><span class="s1">&#39;Obama&#39;</span><span class="p">,</span> <span class="s1">&#39;Trump&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="c1"># 同一个键！</span>
+</code></pre></div>
+
+<hr />
+<p><strong>输出示例：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">United</span><span class="w"> </span><span class="n">States</span><span class="w"> </span><span class="o">&lt;-&gt;</span><span class="w"> </span><span class="n">Donald</span><span class="w"> </span><span class="n">Trump</span><span class="o">:</span><span class="w"> </span><span class="m">25</span>
+<span class="n">Barack</span><span class="w"> </span><span class="n">Obama</span><span class="w"> </span><span class="o">&lt;-&gt;</span><span class="w"> </span><span class="n">White</span><span class="w"> </span><span class="n">House</span><span class="o">:</span><span class="w"> </span><span class="m">18</span>
+<span class="n">Hillary</span><span class="w"> </span><span class="n">Clinton</span><span class="w"> </span><span class="o">&lt;-&gt;</span><span class="w"> </span><span class="n">Donald</span><span class="w"> </span><span class="n">Trump</span><span class="o">:</span><span class="w"> </span><span class="m">15</span>
+<span class="n">Russia</span><span class="w"> </span><span class="o">&lt;-&gt;</span><span class="w"> </span><span class="n">Vladimir</span><span class="w"> </span><span class="n">Putin</span><span class="o">:</span><span class="w"> </span><span class="m">12</span>
+<span class="n">Facebook</span><span class="w"> </span><span class="o">&lt;-&gt;</span><span class="w"> </span><span class="n">United</span><span class="w"> </span><span class="n">States</span><span class="o">:</span><span class="w"> </span><span class="m">10</span>
+<span class="kc">...</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_2">3. 可视化共现网络</h3>
+<p><strong>目标：</strong>创建一个网络图，展示实体之间的关系</p>
+<p><strong>使用工具：</strong>NetworkX + Matplotlib</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="c1"># 创建图</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+
+<span class="c1"># 只添加频率 &gt;= 5 的共现对</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">ent1</span><span class="p">,</span> <span class="n">ent2</span><span class="p">),</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">cooccurrences</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">ent1</span><span class="p">,</span> <span class="n">ent2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
+
+<span class="c1"># 绘制网络图</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+
+<span class="c1"># 使用spring layout</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+<span class="c1"># 绘制节点</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;lightblue&#39;</span><span class="p">)</span>
+
+<span class="c1"># 绘制边（粗细根据权重）</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">]</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="p">[</span><span class="n">w</span><span class="o">*</span><span class="mf">0.5</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="c1"># 绘制标签</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Entity Co-occurrence Network&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<p><strong>图形解释：</strong></p>
+<div class="codehilite"><pre><span></span><code>- 节点：实体
+- 边：共现关系
+- 边的粗细：共现频率（越粗越频繁）
+
+例如：
+    Obama ————————— White House  （粗线，频繁共现）
+      |                 |
+      |                 |
+    Trump ———————— United States  （粗线）
+      |
+      |
+    Putin ——— Russia  （细线，较少共现）
+</code></pre></div>
+
+<hr />
+<h2 id="ner_2">六、大小写对NER的影响</h2>
+<h3 id="_5">问题</h3>
+<p><strong>大写：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;BARACK OBAMA WAS BORN IN HAWAII&quot;</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="p">)</span>
+
+<span class="c1"># 可能输出：</span>
+<span class="c1"># BARACK OBAMA PERSON  ✅ 正确</span>
+<span class="c1"># HAWAII GPE  ✅ 正确</span>
+</code></pre></div>
+
+<p><strong>小写：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;barack obama was born in hawaii&quot;</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="p">)</span>
+
+<span class="c1"># 可能输出：</span>
+<span class="c1"># （没有实体！）❌ 错误</span>
+</code></pre></div>
+
+<hr />
+<h3 id="_6">为什么？</h3>
+<p><strong>NER模型依赖大小写特征：</strong></p>
+<div class="codehilite"><pre><span></span><code>英语中，专有名词（人名、地名）通常首字母大写
+→ 模型学习到了这个特征
+→ 小写文本失去了这个重要线索
+</code></pre></div>
+
+<p><strong>例子：</strong></p>
+<div class="codehilite"><pre><span></span><code>&quot;I saw a turkey in Turkey&quot;
+
+正常大小写：
+- turkey (小写) → 可能是动物
+- Turkey (大写) → 可能是国家
+
+全小写：
+- turkey → 无法区分
+</code></pre></div>
+
+<hr />
+<h3 id="_7">解决方案</h3>
+<p><strong>方案1：保持原始大小写</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 不要预处理时就转小写</span>
+<span class="c1"># 错误：</span>
+<span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  <span class="err">❌</span>
+
+<span class="c1"># 正确：</span>
+<span class="n">text</span> <span class="o">=</span> <span class="n">text</span>  <span class="c1"># 保持原样</span>
+</code></pre></div>
+
+<hr />
+<p><strong>方案2：使用大小写不敏感的模型</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># spaCy的某些模型对大小写不那么敏感</span>
+<span class="c1"># 但准确率可能下降</span>
+</code></pre></div>
+
+<hr />
+<p><strong>方案3：恢复大小写（如果必须要小写）</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 如果文本已经是小写，尝试恢复</span>
+<span class="c1"># 这通常很困难且不准确</span>
+</code></pre></div>
+
+<hr />
+<h2 id="fool-the-model">七、模型的缺陷（"Fool the Model"）</h2>
+<h3 id="1_4">1. 新实体无法识别</h3>
+<p><strong>问题：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Elon Musk founded SpaceX in 2002&quot;</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<span class="c1"># 如果模型训练数据是2010年之前的</span>
+<span class="c1"># 可能无法识别&quot;Elon Musk&quot;和&quot;SpaceX&quot;（因为那时它们不出名）</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_3">2. 上下文歧义</h3>
+<p><strong>例子1："Washington"</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text1</span> <span class="o">=</span> <span class="s2">&quot;George Washington was the first president&quot;</span>
+<span class="c1"># Washington → PERSON ✅</span>
+
+<span class="n">text2</span> <span class="o">=</span> <span class="s2">&quot;I visited Washington last year&quot;</span>
+<span class="c1"># Washington → GPE ✅</span>
+
+<span class="n">text3</span> <span class="o">=</span> <span class="s2">&quot;Washington approved the budget&quot;</span>
+<span class="c1"># Washington → ??? (可能是人名，可能是地名)</span>
+<span class="c1"># 模型可能搞混</span>
+</code></pre></div>
+
+<hr />
+<p><strong>例子2："Turkey"</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">text1</span> <span class="o">=</span> <span class="s2">&quot;I visited Turkey last summer&quot;</span>
+<span class="c1"># Turkey → GPE ✅</span>
+
+<span class="n">text2</span> <span class="o">=</span> <span class="s2">&quot;I ate turkey for Thanksgiving&quot;</span>
+<span class="c1"># turkey → 不是实体 ✅</span>
+
+<span class="n">text3</span> <span class="o">=</span> <span class="s2">&quot;Turkey is delicious&quot;</span>
+<span class="c1"># Turkey → GPE? 还是食物？</span>
+<span class="c1"># 模型可能错误</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_3">3. 缩写和简称</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;The UK voted to leave the EU&quot;</span>
+<span class="c1"># UK → GPE ✅</span>
+<span class="c1"># EU → ORG ✅</span>
+
+<span class="c1"># 但是：</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;My friend lives in the uk&quot;</span>
+<span class="c1"># uk (小写) → 可能无法识别 ❌</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4_2">4. 嵌套实体</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;University of California, Berkeley&quot;</span>
+<span class="c1"># 这是一个实体</span>
+<span class="c1"># 但可能被识别为：</span>
+<span class="c1"># - &quot;University of California&quot; (ORG)</span>
+<span class="c1"># - &quot;Berkeley&quot; (GPE)</span>
+<span class="c1"># 两个独立实体，而不是一个</span>
+
+<span class="c1"># 或者完全识别为：</span>
+<span class="c1"># - &quot;University of California, Berkeley&quot; (ORG) ✅ 正确</span>
+</code></pre></div>
+
+<hr />
+<h3 id="5">5. 创造性/非正式表达</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;The Donald tweeted again&quot;</span>
+<span class="c1"># &quot;The Donald&quot; → 指Donald Trump</span>
+<span class="c1"># 但模型可能无法识别</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Beyoncé dropped a new album&quot;</span>
+<span class="c1"># &quot;Beyoncé&quot; → 可能因为特殊字符无法识别</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;I met J.Lo at the airport&quot;</span>
+<span class="c1"># &quot;J.Lo&quot; → Jennifer Lopez的昵称</span>
+<span class="c1"># 模型可能无法识别</span>
+</code></pre></div>
+
+<hr />
+<h2 id="ner_3">八、评估NER模型</h2>
+<h3 id="1_5">1. 评估指标</h3>
+<p><strong>精确率（Precision）：</strong></p>
+<div class="codehilite"><pre><span></span><code>精确率 = 正确识别的实体数 / 所有识别出的实体数
+
+例如：
+模型识别了100个实体
+其中80个是正确的
+20个是错误的（误报）
+
+精确率 = 80 / 100 = 80%
+</code></pre></div>
+
+<hr />
+<p><strong>召回率（Recall）：</strong></p>
+<div class="codehilite"><pre><span></span><code>召回率 = 正确识别的实体数 / 应该识别的实体数
+
+例如：
+文本中实际有120个实体
+模型只识别出了80个
+
+召回率 = 80 / 120 = 66.7%
+</code></pre></div>
+
+<hr />
+<p><strong>F1分数（F1 Score）：</strong></p>
+<div class="codehilite"><pre><span></span><code>F1 = 2 × (Precision × Recall) / (Precision + Recall)
+
+调和平均数，综合考虑精确率和召回率
+
+例如：
+Precision = 80%
+Recall = 66.7%
+
+F1 = 2 × (0.8 × 0.667) / (0.8 + 0.667)
+   = 2 × 0.534 / 1.467
+   = 0.728
+   = 72.8%
+</code></pre></div>
+
+<hr />
+<h3 id="2_4">2. 混淆矩阵示例</h3>
+<p><strong>对于多类别NER：</strong></p>
+<div class="codehilite"><pre><span></span><code>         预测
+实际    PERSON  ORG   GPE  其他
+PERSON [  80    5     2    13  ]
+ORG    [  3     60    1    6   ]
+GPE    [  1     2     70   7   ]
+其他   [  10    8     5    177 ]
+
+对角线：正确识别
+非对角线：错误识别
+
+例如：
+- 80个PERSON被正确识别为PERSON
+- 5个PERSON被错误识别为ORG
+- 3个ORG被错误识别为PERSON
+</code></pre></div>
+
+<hr />
+<h2 id="_8">九、实际应用建议</h2>
+<h3 id="1_6">1. 选择合适的方法</h3>
+<p><strong>使用Gazetteer，如果：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">实体列表固定且可枚举</span>
+<span class="w">   </span><span class="n">例如</span><span class="err">：</span><span class="n">国家</span><span class="err">、</span><span class="n">州</span><span class="err">、</span><span class="n">城市列表</span>
+
+<span class="mf">2.</span><span class="w"> </span><span class="n">准确率要求高</span>
+<span class="w">   </span><span class="n">例如</span><span class="err">：</span><span class="n">法律文件</span><span class="err">、</span><span class="n">医疗记录</span>
+
+<span class="mf">3.</span><span class="w"> </span><span class="n">特定领域</span>
+<span class="w">   </span><span class="n">例如</span><span class="err">：</span><span class="n">公司名称</span><span class="err">、</span><span class="n">产品型号</span>
+</code></pre></div>
+
+<hr />
+<p><strong>使用机器学习（spaCy），如果：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">实体种类多样</span>
+<span class="w">   </span><span class="n">例如</span><span class="err">：</span><span class="n">新闻文章</span><span class="err">、</span><span class="n">社交媒体</span>
+
+<span class="mf">2.</span><span class="w"> </span><span class="n">需要处理新实体</span>
+<span class="w">   </span><span class="n">例如</span><span class="err">：</span><span class="n">识别新公司</span><span class="err">、</span><span class="n">新人物</span>
+
+<span class="mf">3.</span><span class="w"> </span><span class="n">需要考虑上下文</span>
+<span class="w">   </span><span class="n">例如</span><span class="err">：</span><span class="n">区分</span><span class="s">&quot;Apple&quot;</span><span class="err">（</span><span class="n">公司</span><span class="err">）</span><span class="n">和</span><span class="s">&quot;apple&quot;</span><span class="err">（</span><span class="n">水果</span><span class="err">）</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_5">2. 组合两种方法</h3>
+<p><strong>最佳实践：</strong></p>
+<div class="codehilite"><pre><span></span><code>步骤1：用spaCy识别大部分实体
+步骤2：用Gazetteer补充特定领域的实体
+步骤3：合并结果
+
+例如：
+spaCy识别：人名、日期、地名等通用实体
+Gazetteer补充：公司内部的产品名称、部门名称等
+</code></pre></div>
+
+<hr />
+<h3 id="3_4">3. 预处理建议</h3>
+<p><strong>保持大小写：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 不要：</span>
+<span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  <span class="err">❌</span>
+
+<span class="c1"># 要：</span>
+<span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  <span class="err">✅</span> <span class="n">只去除首尾空格</span>
+</code></pre></div>
+
+<hr />
+<p><strong>去除重复：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>  <span class="c1"># 去除重复行</span>
+</code></pre></div>
+
+<hr />
+<p><strong>处理缺失值：</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 去除空白文本</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_9">十、纸笔考试重点</h2>
+<h3 id="_10">必须掌握</h3>
+<h4 id="1-ner">1. ✅ <strong>NER的定义和目的</strong></h4>
+<div class="codehilite"><pre><span></span><code>定义：识别文本中的命名实体（人名、地名、组织名等）
+目的：信息提取、知识图谱构建、问答系统等
+</code></pre></div>
+
+<hr />
+<h4 id="2-ner">2. ✅ <strong>两种NER方法的对比</strong></h4>
+<div class="codehilite"><pre><span></span><code>Gazetteer（基于规则）：
+  优点：准确率高、可控
+  缺点：覆盖不全、维护成本高
+
+机器学习（神经网络）：
+  优点：泛化能力强、可处理新实体
+  缺点：可能出错、需要训练数据
+</code></pre></div>
+
+<hr />
+<h4 id="3_5">3. ✅ <strong>常见实体类型</strong></h4>
+<div class="codehilite"><pre><span></span><code>PERSON：人名
+GPE：地理政治实体（国家、城市等）
+ORG：组织
+DATE：日期
+NORP：国籍/宗教/政治团体
+</code></pre></div>
+
+<hr />
+<h4 id="4_3">4. ✅ <strong>实体共现的概念</strong></h4>
+<div class="codehilite"><pre><span></span><code>定义：两个实体在同一文本中出现
+意义：发现实体之间的关系
+</code></pre></div>
+
+<hr />
+<h4 id="5-ner">5. ✅ <strong>大小写对NER的影响</strong></h4>
+<div class="codehilite"><pre><span></span><code>大写：提供重要的特征信息
+小写：可能导致实体无法识别
+</code></pre></div>
+
+<hr />
+<h3 id="_11">可能的考题</h3>
+<h4 id="1_7">题型1：识别实体</h4>
+<p><strong>题目：</strong>标注以下文本中的命名实体</p>
+<div class="codehilite"><pre><span></span><code>&quot;Mike Pence once said that smoking doesn&#39;t kill people.&quot;
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>Mike Pence ← PERSON（人名）
+
+解释：
+- &quot;Mike Pence&quot; 是美国前副总统的名字
+- smoking、people 不是命名实体（只是普通词汇）
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="2_6">题型2：实体类型判断</h4>
+<p><strong>题目：</strong>判断以下实体的类型</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="s">&quot;United Nations&quot;</span>
+<span class="mf">2.</span><span class="w"> </span><span class="s">&quot;January 20, 2017&quot;</span>
+<span class="mf">3.</span><span class="w"> </span><span class="s">&quot;British&quot;</span>
+<span class="mf">4.</span><span class="w"> </span><span class="s">&quot;$100&quot;</span>
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="s">&quot;United Nations&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="ow">OR</span><span class="n">G</span><span class="err">（</span><span class="n">组织</span><span class="err">）</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="n">联合国是国际组织</span>
+
+<span class="mf">2.</span><span class="w"> </span><span class="s">&quot;January 20, 2017&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">DATE</span><span class="err">（</span><span class="n">日期</span><span class="err">）</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="n">明确的日期</span>
+
+<span class="mf">3.</span><span class="w"> </span><span class="s">&quot;British&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">NORP</span><span class="err">（</span><span class="n">国籍</span><span class="o">/</span><span class="n">宗教</span><span class="o">/</span><span class="n">政治团体</span><span class="err">）</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="n">指英国人</span><span class="err">、</span><span class="n">英国的</span>
+
+<span class="mf">4.</span><span class="w"> </span><span class="s">&quot;$100&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">MONEY</span><span class="err">（</span><span class="n">货币</span><span class="err">）</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="n">美元金额</span>
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="3_6">题型3：方法选择</h4>
+<p><strong>题目：</strong>以下场景应该使用Gazetteer还是机器学习方法？</p>
+<div class="codehilite"><pre><span></span><code>场景1：识别所有美国50个州的名称
+场景2：识别新闻文章中的所有人名
+场景3：识别公司内部的产品代号
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>场景1：Gazetteer
+  理由：
+  - 美国州的列表是固定的（50个）
+  - 不会有新的州出现
+  - 准确率要求高
+
+场景2：机器学习（spaCy）
+  理由：
+  - 人名种类繁多，无法枚举
+  - 新人物不断出现
+  - 需要根据上下文判断
+
+场景3：Gazetteer
+  理由：
+  - 公司产品代号是内部定义的
+  - 有明确的列表
+  - 外部模型不知道这些特定名称
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="4_4">题型4：共现分析</h4>
+<p><strong>题目：</strong>给定以下3条文本，找出所有实体共现对</p>
+<div class="codehilite"><pre><span></span><code>文本1：&quot;Obama met Putin in Moscow&quot;
+文本2：&quot;Trump criticized Obama&quot;
+文本3：&quot;Putin visited Moscow&quot;
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>首先识别实体：
+文本1：Obama (PERSON), Putin (PERSON), Moscow (GPE)
+文本2：Trump (PERSON), Obama (PERSON)
+文本3：Putin (PERSON), Moscow (GPE)
+
+文本1的共现对：
+- (Obama, Putin)
+- (Obama, Moscow)
+- (Putin, Moscow)
+
+文本2的共现对：
+- (Obama, Trump)
+
+文本3的共现对：
+- (Putin, Moscow)
+
+统计频率：
+- (Putin, Moscow): 2次
+- (Obama, Putin): 1次
+- (Obama, Moscow): 1次
+- (Obama, Trump): 1次
+
+最常见的共现对：(Putin, Moscow)
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h4 id="5_1">题型5：模型缺陷分析</h4>
+<p><strong>题目：</strong>为什么以下文本可能会"欺骗"NER模型？</p>
+<div class="codehilite"><pre><span></span><code>&quot;I like turkey&quot;
+</code></pre></div>
+
+<details>
+<summary>答案</summary>
+
+
+<div class="codehilite"><pre><span></span><code>问题：歧义
+
+&quot;turkey&quot;有两个含义：
+1. 土耳其（国家，GPE）
+2. 火鸡（食物，不是实体）
+
+模型可能：
+- 错误地识别为 GPE（土耳其）
+- 正确地不识别为实体
+
+上下文线索：
+&quot;like&quot; 后面通常跟食物或活动
+→ 应该是火鸡，不是土耳其
+
+但模型可能没学好这个规则
+→ 看到大写的&quot;turkey&quot;就识别为国家
+
+正确答案：不应该识别为实体（这里指食物）
+
+如果是&quot;I visited Turkey&quot;
+→ 应该识别为 GPE
+</code></pre></div>
+
+
+</details>
+
+<hr />
+<h2 id="python">十一、Python实现要点</h2>
+<h3 id="1-spacy_1">1. spaCy基础</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">spacy</span>
+
+<span class="c1"># 加载模型</span>
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">)</span>
+
+<span class="c1"># 处理文本</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="s2">&quot;Your text here&quot;</span><span class="p">)</span>
+
+<span class="c1"># 获取实体</span>
+<span class="n">entities</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="p">)</span> <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">]</span>
+
+<span class="c1"># 获取tokens</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">token</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">]</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_7">2. 批量处理（提高效率）</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 不高效：</span>
+<span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">:</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># 每次单独处理</span>
+
+<span class="c1"># 高效：</span>
+<span class="n">docs</span> <span class="o">=</span> <span class="n">nlp</span><span class="o">.</span><span class="n">pipe</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>  <span class="c1"># 批量处理</span>
+<span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">docs</span><span class="p">:</span>
+    <span class="c1"># 处理doc</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3-pandas">3. Pandas整合</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spacy</span>
+
+<span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_sm&quot;</span><span class="p">)</span>
+
+<span class="c1"># 读取数据</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># 应用NER</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;entities&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[(</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="p">)</span> <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">nlp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ents</span><span class="p">])</span>
+
+<span class="c1"># 统计实体数量</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;entity_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;entities&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4_5">4. 可视化</h3>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">spacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">displacy</span>
+
+<span class="c1"># 可视化NER结果（Jupyter Notebook中）</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="s2">&quot;Barack Obama was born in Hawaii&quot;</span><span class="p">)</span>
+<span class="n">displacy</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;ent&#39;</span><span class="p">,</span> <span class="n">jupyter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># 输出HTML</span>
+<span class="n">html</span> <span class="o">=</span> <span class="n">displacy</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;ent&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;ner_result.html&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_12">十二、记忆口诀</h2>
+<h3 id="ner_4">NER基础</h3>
+<div class="codehilite"><pre><span></span><code>人名地名组织名，
+日期货币不能忘，
+实体识别找关键，
+信息提取第一步。
+</code></pre></div>
+
+<h3 id="_13">两种方法</h3>
+<div class="codehilite"><pre><span></span><code>Gazetteer列表查，
+准确但要常更新，
+spaCy神经网络强，
+新词也能猜一猜。
+</code></pre></div>
+
+<h3 id="_14">共现分析</h3>
+<div class="codehilite"><pre><span></span><code>同文共现有联系，
+频率高则关系密，
+网络图来可视化，
+一眼看清谁和谁。
+</code></pre></div>
+
+<hr />
+<h2 id="_15">十三、常见错误</h2>
+<h3 id="1_8">❌ 错误1：预处理时转小写</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Barack Obama&quot;</span>
+<span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  <span class="c1"># &quot;barack obama&quot;</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="c1"># 可能无法识别实体 ❌</span>
+
+<span class="c1"># 正确</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Barack Obama&quot;</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># 保持大小写</span>
+<span class="c1"># 正确识别 ✅</span>
+</code></pre></div>
+
+<hr />
+<h3 id="2_8">❌ 错误2：忘记去重</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
+<span class="c1"># 不去重，浪费时间处理重复数据 ❌</span>
+
+<span class="c1"># 正确</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>  <span class="err">✅</span>
+</code></pre></div>
+
+<hr />
+<h3 id="3_7">❌ 错误3：共现对不排序</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误</span>
+<span class="n">cooc</span><span class="p">[(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">)]</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="n">cooc</span><span class="p">[(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">)]</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># 两个不同的键 ❌</span>
+
+<span class="c1"># 正确</span>
+<span class="n">pair</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">]))</span>
+<span class="n">cooc</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 总是 (&#39;A&#39;, &#39;B&#39;)</span>
+<span class="n">pair</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">]))</span>
+<span class="n">cooc</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 也是 (&#39;A&#39;, &#39;B&#39;) ✅</span>
+</code></pre></div>
+
+<hr />
+<h3 id="4_6">❌ 错误4：单独处理而不批量</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误（慢）</span>
+<span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">:</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="err">❌</span>
+
+<span class="c1"># 正确（快）</span>
+<span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">nlp</span><span class="o">.</span><span class="n">pipe</span><span class="p">(</span><span class="n">texts</span><span class="p">):</span>
+    <span class="c1"># 处理  ✅</span>
+</code></pre></div>
+
+<hr />
+<p><strong>祝你考试顺利！</strong> 🎉</p>
+<p><strong>Lecture 7核心要点：</strong>
+- NER：识别文本中的命名实体
+- Gazetteer：基于列表匹配，准确但覆盖有限
+- spaCy：基于神经网络，泛化能力强
+- 实体共现：分析实体之间的关系
+- 大小写很重要：影响识别准确率
+- 常见实体类型：PERSON, GPE, ORG, DATE, NORP等</p>
+<p><strong>记住：</strong>理解两种方法的优缺点，知道何时使用哪种！会计算实体共现！</p>
+    </div>
+</body>
+</html>
