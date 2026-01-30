@@ -1,0 +1,441 @@
+--- START OF 卷子com6115.pdf ---
+COM6115
+Autumn Semester 2022/23 
+2 hours
+Data Provided:
+None
+DEPARTMENT OF COMPUTER SCIENCE
+TEXT PROCESSING
+Answer THREE questions.
+All questions carry equal weight. Figures in square brackets indicate the per-
+centage of available marks allocated to each part of a question.
+COM6115 1 TURN OVER
+COM6115
+THIS PAGE IS BLANK
+COM6115 2 CONTINUED
+COM6115
+1. a) Sentiment Analysis (SA) can be performed at different levels of granularity. Describe
+three different levels on which sentiment analysis can be performed, and explain which
+level you think gives the most precise analysis. [15%]
+b) Explain the weighted lexical-based approach for Sentiment Analysis. [15%]
+c) Specify the quintuple of Bing Liu’s model for Sentiment Analysis and explain each of
+its elements. Exemplify the model with respect to the example below. Identify all the
+features present in the text and, for each of them, indicate the sentiment value as
+positive or negative.
+“I have just arrived in a late night flight from Lisbon with Ryanair. The flight
+was 7 hours delayed, which was a terrible experience. The lack of drinkable water
+on-board also made the in-flight experience awful, mainly for elderly and children.
+The main drawback was the ticket price, that was very expensive for a low-budget
+company. The only good thing was the staff: they were very helpful and managed
+to keep everyone calm. William MacS, 12/10/2022.”
+[20%]
+d) One approach to Sentiment Analysis is the corpus-based supervised learning approach.
+(i) Give the mathematical formulation of the Naive Bayes classifier and explain in
+detail how such a classifier can be trained and used to predict the polarity class
+(positive or negative) of a subjective text. [15%]
+(ii) Explain what assumption makes the Naive Bayes classifier naive. Discuss the
+validity of this assumption for NLP classification tasks such as Sentiment Anal-
+ysis. [10%]
+(iii) Suppose you are given the following set of labelled examples as training data:
+Doc Words Class
+1 Amazing movie, the perfect way to make a sequel. Positive
+2 Hypnotic, surrealist , and most of all, maybe the most
+beautiful movie of the year.
+Positive
+3 Beautiful film. Well-paced ; never felt it was overly long. Positive
+4 Visually stunning and amazing . A bit long , perhaps,
+but never boring .
+Positive
+5 Great plot but bad acting. Too long , boring in the
+middle.
+Negative
+6 Very boring , not entertaining , too artsy , plot holes
+galore, too long .
+Negative
+7 Visually beautiful but way too long and the soundtrack
+was annoying
+Negative
+COM6115 3 TURN OVER
+COM6115
+Using as features just the adjectives (underlined words in the examples), how
+would a Naive Bayes sentiment analyser trained on these examples classify the
+sentiment of the new, unseen text show below?
+Doc Words Class
+9 Beautiful sets but too long and sooo boring . ???
+Show how you derived your answer. You may assume standard pre-processing
+is carried out, i.e. tokenisation, lowercasing and punctuation removal. (Note:
+You do not need to smooth feature counts)
+[25%]
+COM6115 4 CONTINUED
+COM6115
+2. a) The table below shows a confusion matrix.
+Predicted + Predicted -
+True + 100 40
+True - 60 300
+(i) Calculate the following measures: overall accuracy; precision; recall; F-Measure.
+[10%]
+(ii) Explain under what circumstances using accuracy as a measure will cause issues.
+[5%]
+b) For the processing pipeline commonly followed within natural language generation
+(NLG) systems
+(i) Describe the stages of processing within the pipeline. For each stage, please
+explain its purposes. [15%]
+(ii) Explain which aspect of a typical NLG pipeline is most important and why? [5%]
+c) (i) Explain what are Cue phrases and Rhetorical Relations. [5%]
+(ii) List four Rhetorical Relations and provide an example sentence that contains
+at least two Rhetorical Relations from your list. [10%]
+d) Briefly discuss two baseline approaches for Word Sense Disambiguation . [15%]
+e) Using the Lesk algorithm show how the word bank in Sentence 1 is disambiguated
+and which sense is chosen:
+Sentence 1 : That bank is shaped by the currents and water channels and holds
+deposits of sand.
+given the following two WordNet senses:
+bank1 Gloss: a financial institution that accepts deposits
+and channels the money into lending activities
+Examples: “he cashed a check at the bank”,
+“that bank holds the mortgage on my home”
+bank2 Gloss: sloping land (especially the slope beside a body of water)
+Examples: “they pulled the canoe up on the bank”,
+“he sat on the bank of the river and watched the currents”
+[15%]
+COM6115 5 TURN OVER
+COM6115
+f) Calculate the word similarity between knowledge and information and knowledge and
+digital using cosine similarity, and determine which one is closer in meaning to knowl-
+edge, assuming the raw counts from the following shortened table:
+retrieval data computer
+information 25 8 2
+digital 5 4 7
+knowledge 5 12 6
+[20%]
+COM6115 6 CONTINUED
+COM6115
+3. a) One of the main tasks of Information Extraction is that of Relation Extraction . Pro-
+vide a concise explanation of what relation extraction is, and demonstrate it with an
+example. [10%]
+b) Moreover, as relation extraction may be subdivided into two tasks, relation detection
+and relation classification, very briefly explain what each of these two tasks are, using
+an example to demonstrate your explanation and clarifying how they differ. [10%]
+c) As supervised learning approaches to relation extraction require extremely large amounts
+of manually annotated training data, alternative approaches that address this problem
+have been devised, such as a bootstrapping approach to relation extraction. Explain
+VERY BRIEFLY the bootstrapping approach to relation extraction, including its main
+advantages and disadvantages, and demonstrating how it works with an example. [30%]
+d) In the context of Information Retrieval, given the following documents:
+Document 1 : Summer scent!! Find your summer scent.
+Document 2 : You will find all lovely summer scents at the Summer Province
+Market.
+Document 3 : Marketing is growing, in the Summer Scently Provincial Markets.
+and the query:
+Query 1 : summer scent province market
+(i) Apply the following term manipulations on document terms: stoplist removal,
+capitalisation and stemming, showing the transformed documents. Explain
+each of these manipulations. Include in your answer the stoplist you used,
+making sure it includes punctuation, but no content words. [20%]
+(ii) Show how Document 1, Document 2 and Document 3 would be represented
+using an inverted index which includes term frequency information. [10%]
+(iii) Using term frequency (TF) to weight terms, represent the documents and query
+as vectors. Produce rankings of Document 1, Document 2 and Document 3
+according to their relevance to Query 1 using the Euclidean Distance as metric.
+Show which document is ranked first according to this metric. [20%]
+COM6115 7 TURN OVER
+COM6115
+END OF QUESTION PAPER
+COM6115 8
+
+--- END OF 卷子com6115.pdf ---
+
+--- START OF com6115_2122.pdf ---
+COM6115
+Ancillary Material: None
+DEPARTMENT OF COMPUTER SCIENCE Autumn Semester 21/22
+TEXT PROCESSING 2 hours
+Answer THREE questions.
+All questions carry equal weight. Figures in square brackets indicate the per-
+centage of available marks allocated to each part of a question.
+COM6115 1 TURN OVER
+COM6115
+THIS PAGE IS BLANK
+COM6115 2 CONTINUED
+COM6115
+1. In the context of Information Retrieval, given the following documents:
+Document 1 : Your dataset is corrupt. Corrupted data does not hash!!!
+Document 2 : Your data system will transfer corrupted data ﬁles to trash.
+Document 3 : Many politicians are corrupt in some developing countries.
+and the query:
+Query 1 : hashing corrupted data
+a) Apply the following term manipulations on document terms: stoplist removal , capi-
+talisation and stemming, showing the transformed documents. Explain each of these
+manipulations. Include in your answer the stoplist you have used. [20%]
+b) Show how Document 1, Document 2 and Document 3 would be represented using an
+inverted index which includes term frequency information. [10%]
+c) Using term frequency (TF) to weight terms, represent the documents and query as
+vectors. Produce rankings of Document 1, Document 2 and Document 3 according
+to their relevance to Query 1 using two metrics: Cosine Similarity and Euclidean
+Distance. Show which document is ranked ﬁrst according to each of these metrics.
+[30%]
+d) Explain the intuition behind using TF.IDF ( term frequency inverse document fre-
+quency) to weight terms in documents. Include the formula (or formulae) for com-
+puting TF.IDF values as part of your answer. For the ranking in the previous question
+using cosine similarity, discuss whether and how using TF.IDF to weight terms in-
+stead of TF only would change the results (assume here that the document collection
+consists solely of Documents 1 – 3). [20%]
+e) Explain the metrics Precision, Recall and F-measure in the context of evaluating an
+Information Retrieval system against a gold-standard set. Discuss why it is not feasible
+to compute recall in the context of searches performed on very large collections of
+documents, such as the Web. [20%]
+COM6115 3 TURN OVER
+COM6115
+2. a) What are the stages of processing commonly followed within natural language gener-
+ation (NLG) systems? For each stage, please explain its purposes. [25%]
+b) An NLG system needs to take care of details of language such as morphological details.
+How does inﬂectional morphology diﬀer from derivational morphology? Explain with
+examples from the English language. [25%]
+c) Explain three metrics to evaluate the quality of binary (negative/positive) sentiment
+analysis systems. Give their intuitions and show their formulae. [25%]
+d) Explain the intuition behind using a Naive Bayes classiﬁer for text classiﬁcation. Give
+the general classiﬁer equation as part of your answer. What are the main components
+in this classiﬁer? [25%]
+COM6115 4 CONTINUED
+COM6115
+3. a) Diﬀerentiate subjectivity from sentiment. How are the tasks of Subjectivity Classiﬁ-
+cation and Sentiment Analysis related? [20%]
+b) Discuss the relevance of automatic techniques for sentiment analysis for marketing
+purposes. [20%]
+c) Explain the weighted lexical-based approach for Sentiment Analysis. Given the fol-
+lowing sentences and opinion lexicon, apply this approach to classify each sentence
+in S1-S4 as positive, negative or objective. Show the ﬁnal emotion score for
+each sentence and also how this score was generated. Give any general rules that you
+used to calculate this score as part of your answer. Explain these rules when they are
+applied. [30%]
+Lexicon:
+awesome 5
+boring -3
+brilliant 2
+funny 3
+happy 4
+horrible -5
+(S1) He is brilliant and funny.
+(S2) I am not happy with this outcome.
+(S3) I am feeling AWESOME today, despite the horrible comments from my su-
+pervisor.
+(S4) He is extremely brilliant but boring, boring, very boring.
+d) Give Bing Liu’s model for an opinion. Explain each of the elements in the model and
+exemplify them with respect to the following text. Identify the features present in the
+text, and for each indicate its sentiment value as either positive or negative. Discuss
+two language processing challenges in automating the identiﬁcation of such elements.
+[30%]
+“I have just bought the new iPhone 13. It is a bit heavier than the iPhone 12, but
+it is much faster. The camera lenses are also much better, taking higher resolution
+pictures. The only big disadvantage is the cost: it is the most expensive phone in
+the market. Mark Jobs, 12/11/2021.”
+COM6115 5 TURN OVER
+COM6115
+4. Relation extraction is one of the main tasks in the sub-area of text processing known as
+information extraction.
+a) Brieﬂy explain what the task of relation extraction is and illustrate your answer with
+an example. [10%]
+b) Relation extraction is sometimes split into two sub-tasks, relation detection and re-
+lation classiﬁcation . Explain what relation detection and relation classiﬁcation are,
+making clear how they diﬀer, and illustrate your answer with an example (you may
+use the same example as in the preceeding part, but are not required to do so). [10%]
+c) Various linguistic features of natural language make relation extraction hard. Identify
+three such features and give an example of each. [20%]
+d) Supervised learning approaches to relation extraction have been quite successful but
+have the drawback of requiring substantial amounts of manually annotated training
+data. Two approaches that have been devised to address this problem are the distant
+supervision approach to relation extraction and the bootstrapping approach to relation
+extraction.
+(i) Brieﬂy explain how the distant supervision approach to relation extraction
+works, give an example of how it works and brieﬂy identify the strengths and
+weaknesses of this approach. [30%]
+(ii) Brieﬂy explain how the bootstrapping approach to relation extraction works,
+give an example of how it works and brieﬂy identify the strengths and weak-
+nesses of this approach. [30%]
+END OF QUESTION PAPER
+COM6115 6
+
+--- END OF com6115_2122.pdf ---
+
+--- START OF com6115_1617.pdf ---
+COM6115
+Data Provided: None
+DEPARTMENT OF COMPUTER SCIENCE Autumn Semester 2016-2017
+TEXT PROCESSING 2 hours 30 minutes
+Answer the question in Section A, and THREE questions from Section B.
+All questions carry equal weight. Figures in square brackets indicate the per-
+centage of available marks allocated to each part of a question.
+COM6115 1 TURN OVER
+COM6115
+THIS PAGE LEFT INTENTIONALLY BLANK
+COM6115 2 CONTINUED
+COM6115
+SECTION A
+1. a) Explain brieﬂy the intuition behind the PageRank algorithm. Discuss how it can
+distinguish two or more documents that are ranked equally “relevant” according to
+the similarity score given by the vector space model. [25%]
+b) What advantages does phrase-based statistical machine translation have over word-
+based statistical machine translation? Explain how word alignment techniques can be
+exploited to do phrase alignment. [25%]
+c) Diﬀerentiate direct from comparative Sentiment Analysis, giving an example of each.
+Describe at least three types of comparative relations that comparative Sentiment
+Analysis must address, giving an example of each. What are the elements necessary
+in a comparative model of Sentiment Analysis? [25%]
+d) Compression techniques are important due to the growth in volume of the data that
+must be stored and transmitted.
+(i) Explain the diﬀerence between lossy and lossless forms of compression. Dis-
+cuss the suitability of these alternative forms of compression for diﬀerent media
+types (e.g. for text vs. image data). [10%]
+(ii) Explain the diﬀerence between static, semi-static and adaptive techniques
+for text compression, noting their key advantages and disadvantages. [15%]
+COM6115 3 TURN OVER
+COM6115
+SECTION B
+2. In the context of Information Retrieval, given the following documents:
+Document 1 : Your dataset is corrupt. Corrupted data does not hash!!!
+Document 2 : Your data system will transfer corrupted data ﬁles to trash.
+Document 3 : Most politicians are corrupt in many developing countries.
+and the query:
+Query 1 : hashing corrupted data
+a) Apply the following term manipulations on document terms: stoplist removal , capi-
+talisation and stemming, showing the transformed documents. Explain each of these
+manipulations. Include in your answer the stoplist you used, making sure it includes
+punctuation, but no content words. [20%]
+b) Show how Document 1, Document 2 and Document 3 would be represented using an
+inverted index which includes term frequency information. [10%]
+c) Using term frequency (TF) to weight terms, represent the documents and query as
+vectors. Produce rankings of Document 1, Document 2 and Document 3 according
+to their relevance to Query 1 using two metrics: Cosine Similarity and Euclidean
+Distance. Show which document is ranked ﬁrst according to each of these metrics.
+[30%]
+d) Explain the intuition behind using TF.IDF ( term frequency inverse document fre-
+quency) to weight terms in documents. Include the formula (or formulae) for com-
+puting TF.IDF values as part of your answer. For the ranking in the previous question
+using cosine similarity, discuss whether and how using TF.IDF to weight terms in-
+stead of TF only would change the results (assume here that the document collection
+consists solely of Documents 1 – 3). [20%]
+e) Explain the metrics Precision, Recall and F-measure in the context of evaluating an
+Information Retrieval system against a gold-standard set. Discuss why it is not feasible
+to compute recall in the context of searches performed on very large collections of
+documents, such as the Web. [20%]
+COM6115 4 CONTINUED
+COM6115
+3. a) Explain the diﬀerences between direct, transfer-based and interlingual approaches to
+machine translation. Give the main advantage and disadvantage of each of these
+approaches. [15%]
+b) (i) What is the noisy channel model and how can it be applied to machine trans-
+lation? [15%]
+(ii) State the fundamental probabalistic equation formalising the noisy channel
+model for machine translation and explain how it relates to that model. Show
+how the equation can be rewritten using Bayes Theorem and then simpliﬁed.
+Be sure to state in words what each of the terms in the equation is. [15%]
+(iii) The simpliﬁed equation of 2(b)(ii) has three components that need to be im-
+plemented to build a working machine translation system. Name each of these
+components and describe brieﬂy what its role in the translation system is. [15%]
+c) Explain in a general way how word alignments are learnt from a parallel corpus in IBM
+model 1. Full mathematical details are not necessary. [20%]
+d) Explain brieﬂy how the BLEU measure, which is used to automatically evaluate the
+quality of machine translated texts, is calculated. [20%]
+COM6115 5 TURN OVER
+COM6115
+4. a) Diﬀerentiate subjectivity from sentiment. How are the tasks of Subjectivity Classiﬁ-
+cation and Sentiment Analysis related? [10%]
+b) Give Bing Liu’s model for an opinion. Explain each of the elements in the model and
+exemplify them with respect to the following text, which is adapted from a TripAdvisor
+review of a restaurant in Sheﬃeld. Identify the features present in the text, and for
+each indicate its sentiment value as either positive or negative. Discuss two language
+processing challenges in automating the identiﬁcation of such elements and illustrate
+these challenges with reference to the example text. [30%]
+“I went with my girlfriend on a Friday night, and was greeted in a friendly way by
+the waitress. It is simply decorated and clean, but for my personal taste was a bit
+too bright, and could do with a bit more colour. It is fantastic you can take your
+own wine and there is no uncorking fee. We was welcomed very well by the staﬀ
+and I liked it that she explained the specials board to us and explained what each
+dish was. For starters we had the meat balls... It was amazing !! The sauce was
+so tasty! For our main course we had a sea food mixture with a sauce ... We felt
+it was a little expensive for what it was and was nice but could have been a few
+pounds cheaper.” Trevor M., posted 12/10/2015
+c) Explain the graded lexicon-based approach for Sentiment Analysis. Given the following
+sentences and opinion lexicon, apply this approach to classify each sentence in S1-
+S3 as positive, negative or objective. Show the ﬁnal emotion score for each
+sentence and also how this score was generated. Give any general rules that you
+used to calculate this score as part of your answer. Explain these rules when they are
+applied. [25%]
+Lexicon:
+awesome 5
+boring -3
+brilliant 2
+funny 3
+happy 4
+horrible -5
+(S1) He is brilliant and funny.
+(S2) I am not happy with this outcome.
+(S3) I am feeling AWESOME today, despite the horrible comments from my su-
+pervisor.
+COM6115 6 CONTINUED
+COM6115
+d) A second approach to Sentiment Analysis is the corpus-based supervised learning
+approach.
+(i) Explain the corpus-based supervised learning approach to Sentiment Analysis
+in general terms, i.e. in terms of inputs, outputs and processes involved. [5%]
+(ii) Explain how a Naive Bayes classiﬁer can be trained and then used to predict
+the polarity class (positive or negative) of a subjective text. Be sure to give
+the mathematical formulation of the Naive Bayes classiﬁer. [10%]
+(iii) Suppose you are given the following set of labelled examples as training data:
+Doc Words Class
+1 A sensitive, moving, brilliant work Positive
+2 An edgy thriller that delivers a surprising punch Positive
+3 A sensitive, insightful, beautiful ﬁlm Positive
+4 Neither revelatory nor truly edgy – merely crassly
+flamboyant and comedically labored
+Negative
+5 Unlikable, uninteresting, unfunny, and completely, ut-
+terly inept
+Negative
+6 A sometimes incisive and sensitive portrait that is un-
+dercut by its awkward structure and . . .
+Negative
+7 It’s a sometimes interesting remake that doesn’t com-
+pare to the brilliant original
+Negative
+Using as features just the adjectives (underlined words in the examples), how
+would a Naive Bayes sentiment analyser trained on these examples classify the
+sentiment of the new, unseen text show below?
+Doc Words Class
+8 A sensitive comedy that is moving and surprising ???
+Show how you derived your answer. You may assume standard pre-processing
+is carried out, i.e. tokenisation, lowercasing and punctuation removal. You do
+not need to smooth feature counts.
+[20%]
+COM6115 7 TURN OVER
+COM6115
+5. a) (i) Explain how the LZ77 compression method works. [30%]
+(ii) Assuming the encoding representation used in class (i.e. in the lectures of the
+Text Processing module), show what output would be produced by the LZ77
+decoder for the following representation. Show how your answer is derived.
+<0,0,y> <0,0,a> <0,0,b> <2,1,-> <0,0,d> <5,5,o> <1,4,o> [15%]
+b) We want to compress a large corpus of text of the (ﬁctitious) language Sosumi. The
+writing script of Sosumi uses only the letters {s, o, u, m, i, d} and the symbol ∼
+(which is used as a ‘space’ between words). Corpus analysis shows that the probabilities
+of these seven characters are as follows:
+Symbol Probability
+s 0.12
+o 0.23
+u 0.05
+m 0.25
+i 0.08
+d 0.09
+∼ 0.18
+(i) Sketch the algorithm for Huﬀman coding. Illustrate your answer by constructing
+a code for Sosumi, based on the above character probabilities. [30%]
+(ii) Use your Huﬀman code from 5(b)(i) to encode the message: “ modo∼mi∼sumo”
+How does the bits-per-character rate achieved on this message compare to a
+minimal ﬁxed length binary encoding of the same character set? [5%]
+c) What is a canonical Huﬀman code? Show how a canonical Huﬀman code can be
+derived from the Huﬀman code that you created for Sosumi in 5(b)(i). What are the
+advantages of using a canonical Huﬀman code? [20%]
+END OF QUESTION PAPER
+COM6115 8
+
+--- END OF com6115_1617.pdf ---
+

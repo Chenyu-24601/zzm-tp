@@ -3,29 +3,29 @@
         "topic": "Bernoulli Distribution (Q2.1)",
         "question_en": "Write the Bernoulli distribution equations for P(Y=1) and P(Y=0), and combine them into a single equation P(Y=y).",
         "question_cn": "写出 P(Y=1) 和 P(Y=0) 的伯努利分布方程，并将它们合并为一个方程 P(Y=y)。",
-        "solution_en": "P(Y=1) = $\\pi$, P(Y=0) = $1-\\pi$. Combined: $P(Y=y) = \\pi^y (1-\\pi)^{1-y}$.",
-        "solution_cn": "P(Y=1) = $\\pi$, P(Y=0) = $1-\\pi$。合并后：$P(Y=y) = \\pi^y (1-\\pi)^{1-y}$。"
+        "solution_en": "P(Y=1) = π, P(Y=0) = 1-π.<br/>Combined: P(Y=y) = π<super>y</super> (1-π)<super>1-y</super>.",
+        "solution_cn": "P(Y=1) = π, P(Y=0) = 1-π。<br/>合并后：P(Y=y) = π<super>y</super> (1-π)<super>1-y</super>。"
     },
     {
         "topic": "Log-Likelihood (Q2.4)",
-        "question_en": "Given independent samples $x_i$ with outcomes $y_i$, write the likelihood L and the negative log-likelihood.",
-        "question_cn": "给定具有结果 $y_i$ 的独立样本 $x_i$，写出似然 L 和负对数似然。",
-        "solution_en": "Likelihood $L = \\prod_{i=1}^N p(x_i; y_i)$. Negative log-likelihood = $-\\sum_{i=1}^N \\log p(x_i; y_i)$.",
-        "solution_cn": "似然 $L = \\prod_{i=1}^N p(x_i; y_i)$。负对数似然 = $-\\sum_{i=1}^N \\log p(x_i; y_i)$。"
+        "question_en": "Given independent samples x<sub>i</sub> with outcomes y<sub>i</sub>, write the likelihood L and the negative log-likelihood.",
+        "question_cn": "给定具有结果 y<sub>i</sub> 的独立样本 x<sub>i</sub>，写出似然 L 和负对数似然。",
+        "solution_en": "Likelihood L = ∏<sub>i=1</sub><super>N</super> p(x<sub>i</sub>; y<sub>i</sub>).<br/>Negative log-likelihood = -∑<sub>i=1</sub><super>N</super> log p(x<sub>i</sub>; y<sub>i</sub>).",
+        "solution_cn": "似然 L = ∏<sub>i=1</sub><super>N</super> p(x<sub>i</sub>; y<sub>i</sub>)。<br/>负对数似然 = -∑<sub>i=1</sub><super>N</super> log p(x<sub>i</sub>; y<sub>i</sub>)。"
     },
     {
         "topic": "Logistic Regression Optimization",
-        "question_en": "Derive the derivative of the log-probability for logistic regression using $\\pi(x_i) = \\text{Sigmoid}(w^T x_i)$.",
-        "question_cn": "使用 $\\pi(x_i) = \\text{Sigmoid}(w^T x_i)$ 推导逻辑回归对数概率的导数。",
-        "solution_en": "Log-prob: $y_i \\log \\pi(x_i) + (1-y_i) \\log(1-\\pi(x_i))$. Differentiating requires iterative methods as it's non-linear.",
-        "solution_cn": "对数概率：$y_i \\log \\pi(x_i) + (1-y_i) \\log(1-\\pi(x_i))$。由于是非线性的，微分求解需要迭代方法。"
+        "question_en": "Derive the derivative of the log-probability for logistic regression using π(x<sub>i</sub>) = Sigmoid(w<super>T</super> x<sub>i</sub>).",
+        "question_cn": "使用 π(x<sub>i</sub>) = Sigmoid(w<super>T</super> x<sub>i</sub>) 推导逻辑回归对数概率的导数。",
+        "solution_en": "Log-prob: y<sub>i</sub> log π(x<sub>i</sub>) + (1-y<sub>i</sub>) log(1-π(x<sub>i</sub>)). Differentiating requires iterative methods as it's non-linear.",
+        "solution_cn": "对数概率：y<sub>i</sub> log π(x<sub>i</sub>) + (1-y<sub>i</sub>) log(1-π(x<sub>i</sub>))。由于是非线性的，微分求解需要迭代方法。"
     },
     {
         "topic": "Auto-differentiation (Q3.2)",
         "question_en": "What are the adjoints for reverse mode vs forward mode auto-differentiation?",
         "question_cn": "反向模式与前向模式自动微分的伴随变量（adjoints）分别是什么？",
-        "solution_en": "Reverse mode: $\\bar{v}_i = \\frac{\\partial y_j}{\\partial v_i}$ (gradient of output wrt node). Forward mode: $\\dot{v}_i = \\frac{\\partial v_i}{\\partial x_j}$ (gradient wrt input).",
-        "solution_cn": "反向模式：$\\bar{v}_i = \\frac{\\partial y_j}{\\partial v_i}$（输出相对于节点的梯度）。前向模式：$\\dot{v}_i = \\frac{\\partial v_i}{\\partial x_j}$（相对于输入的梯度）。"
+        "solution_en": "Reverse mode: v&#772;<sub>i</sub> = ∂y<sub>j</sub> / ∂v<sub>i</sub> (gradient of output wrt node).<br/>Forward mode: v&#775;<sub>i</sub> = ∂v<sub>i</sub> / ∂x<sub>j</sub> (gradient wrt input).",
+        "solution_cn": "反向模式：v&#772;<sub>i</sub> = ∂y<sub>j</sub> / ∂v<sub>i</sub>（输出相对于节点的梯度）。<br/>前向模式：v&#775;<sub>i</sub> = ∂v<sub>i</sub> / ∂x<sub>j</sub>（相对于输入的梯度）。"
     },
     {
         "topic": "Neural Networks - Hidden Layers (Q4.3)",
@@ -38,29 +38,29 @@
         "topic": "NN Dimensions (Q4.6)",
         "question_en": "For images of size 30x45 and 5 classes, what is the input size for the first layer (if flattened) and output size?",
         "question_cn": "对于尺寸为 30x45 的图像和 5 个类别，第一层的输入尺寸（如果展平）和输出尺寸是多少？",
-        "solution_en": "Input: $30 \\times 45 = 1350$. Output: 5 (one-hot encoding).",
-        "solution_cn": "输入：$30 \\times 45 = 1350$。输出：5（独热编码）。"
+        "solution_en": "Input: 30 × 45 = 1350. Output: 5 (one-hot encoding).",
+        "solution_cn": "输入：30 × 45 = 1350。输出：5（独热编码）。"
     },
     {
         "topic": "CNN Output Size (Q5.2)",
         "question_en": "Calculate CNN output size. Image N=28, Filter F=5, Padding P=2, Stride S=1. Also for S=2.",
         "question_cn": "计算 CNN 输出尺寸。图像 N=28，滤波器 F=5，填充 P=2，步幅 S=1。以及 S=2 的情况。",
-        "solution_en": "For S=1: $O = \\frac{28-5+4}{1} + 1 = 28$. For S=2: $O = \\frac{28-5+4}{2} + 1 = 14.5 \\to 14$.",
-        "solution_cn": "对于 S=1：$O = \\frac{28-5+4}{1} + 1 = 28$。对于 S=2：$O = \\frac{28-5+4}{2} + 1 = 14.5 \\to 14$。"
+        "solution_en": "Formula: O = (N - F + 2P)/S + 1<br/>For S=1: O = (28 - 5 + 4)/1 + 1 = 28.<br/>For S=2: O = (28 - 5 + 4)/2 + 1 = 14.5 → 14.",
+        "solution_cn": "公式：O = (N - F + 2P)/S + 1<br/>对于 S=1：O = (28 - 5 + 4)/1 + 1 = 28。<br/>对于 S=2：O = (28 - 5 + 4)/2 + 1 = 14.5 → 14。"
     },
     {
         "topic": "CNN Architecture (Q5.3)",
         "question_en": "Suggest a simple CNN architecture for 30x45 RGB images with 5 classes.",
         "question_cn": "为具有 5 个类别的 30x45 RGB 图像建议一个简单的 CNN 架构。",
-        "solution_en": "1. Conv (F=7, P=3, S=1), 8 filters. 2. ReLU. 3. Conv (F=5, P=2, S=3), 16 filters (reduces size). 4. ReLU. 5. FC layer (input 2400, out 600). 6. ReLU. 7. FC layer (out 5).",
-        "solution_cn": "1. 卷积 (F=7, P=3, S=1), 8个滤波器。 2. ReLU。 3. 卷积 (F=5, P=2, S=3), 16个滤波器 (减小尺寸)。 4. ReLU。 5. 全连接层 (输入 2400, 输出 600)。 6. ReLU。 7. 全连接层 (输出 5)。"
+        "solution_en": "1. Conv (F=7, P=3, S=1), 8 filters.<br/>2. ReLU.<br/>3. Conv (F=5, P=2, S=3), 16 filters (reduces size).<br/>4. ReLU.<br/>5. FC layer (input 2400, out 600).<br/>6. ReLU.<br/>7. FC layer (out 5).",
+        "solution_cn": "1. 卷积 (F=7, P=3, S=1), 8个滤波器。<br/>2. ReLU。<br/>3. 卷积 (F=5, P=2, S=3), 16个滤波器 (减小尺寸)。<br/>4. ReLU。<br/>5. 全连接层 (输入 2400, 输出 600)。<br/>6. ReLU。<br/>7. 全连接层 (输出 5)。"
     },
     {
         "topic": "PCA Optimization (Q6.5)",
-        "question_en": "What is the optimisation criterion for the first principal component $u_1$?",
-        "question_cn": "第一主成分 $u_1$ 的优化标准是什么？",
-        "solution_en": "Maximise $u_1^T C u_1 + \\lambda_1 (1 - u_1^T u_1)$. Maximise variance subject to normalisation constraint. Equivalent to minimising reconstruction error.",
-        "solution_cn": "最大化 $u_1^T C u_1 + \\lambda_1 (1 - u_1^T u_1)$。在归一化约束下最大化方差。等同于最小化重构误差。"
+        "question_en": "What is the optimisation criterion for the first principal component u<sub>1</sub>?",
+        "question_cn": "第一主成分 u<sub>1</sub> 的优化标准是什么？",
+        "solution_en": "Maximise u<sub>1</sub><super>T</super> C u<sub>1</sub> + λ<sub>1</sub> (1 - u<sub>1</sub><super>T</super> u<sub>1</sub>). Maximise variance subject to normalisation constraint. Equivalent to minimising reconstruction error.",
+        "solution_cn": "最大化 u<sub>1</sub><super>T</super> C u<sub>1</sub> + λ<sub>1</sub> (1 - u<sub>1</sub><super>T</super> u<sub>1</sub>)。在归一化约束下最大化方差。等同于最小化重构误差。"
     },
     {
         "topic": "Auto-encoders (Q6.6 & Q6.7)",
@@ -80,8 +80,8 @@
         "topic": "Normalized Cut (Q7.5)",
         "question_en": "Define the Normalized Cut (Ncut) between sets A and B.",
         "question_cn": "定义集合 A 和 B 之间的归一化割 (Normalized Cut) 。",
-        "solution_en": "$Ncut(A,B) = \\frac{Cut(A,B)}{Vol(A)} + \\frac{Cut(A,B)}{Vol(B)}$. Where Cut is sum of weights between A and B, Vol is sum of degrees in the set.",
-        "solution_cn": "$Ncut(A,B) = \\frac{Cut(A,B)}{Vol(A)} + \\frac{Cut(A,B)}{Vol(B)}$。其中 Cut 是 A 和 B 之间的权重之和，Vol 是集合中度的总和。"
+        "solution_en": "Ncut(A,B) = Cut(A,B)/Vol(A) + Cut(A,B)/Vol(B).<br/>Where Cut is sum of weights between A and B, Vol is sum of degrees in the set.",
+        "solution_cn": "Ncut(A,B) = Cut(A,B)/Vol(A) + Cut(A,B)/Vol(B)。<br/>其中 Cut 是 A 和 B 之间的权重之和，Vol 是集合中度的总和。"
     },
     {
         "topic": "Naive Bayes (Q8.2)",
@@ -129,8 +129,8 @@
         "topic": "Entropy Equation (Q2)",
         "question_en": "Write the equation for entropy of discrete random variable X.",
         "question_cn": "写出离散随机变量 X 的熵方程。",
-        "solution_en": "$H[X] = - \\sum p(x_i) \\log p(x_i)$.",
-        "solution_cn": "$H[X] = - \\sum p(x_i) \\log p(x_i)$。"
+        "solution_en": "H[X] = - ∑ p(x<sub>i</sub>) log p(x<sub>i</sub>).",
+        "solution_cn": "H[X] = - ∑ p(x<sub>i</sub>) log p(x<sub>i</sub>)。"
     },
     {
         "topic": "Conditional Entropy (Q6)",
@@ -143,29 +143,29 @@
         "topic": "Entropy Calculation (Q7)",
         "question_en": "Calculate conditional entropy of rain given cloud state. P(Cloud)=0.8. P(Rain|Cloud)=0.3, P(Rain|NoCloud)=0.05.",
         "question_cn": "计算给定云状态下雨的条件熵。P(Cloud)=0.8. P(Rain|Cloud)=0.3, P(Rain|NoCloud)=0.05。",
-        "solution_en": "H(Rain|Cloud)=0.88, H(Rain|NoCloud)=0.29. Expected H = $0.8 \\times 0.88 + 0.2 \\times 0.29 = 0.76$ bits.",
-        "solution_cn": "H(Rain|Cloud)=0.88, H(Rain|NoCloud)=0.29. 期望 H = $0.8 \\times 0.88 + 0.2 \\times 0.29 = 0.76$ bits。"
+        "solution_en": "H(Rain|Cloud)=0.88, H(Rain|NoCloud)=0.29.<br/>Expected H = 0.8 × 0.88 + 0.2 × 0.29 = 0.76 bits.",
+        "solution_cn": "H(Rain|Cloud)=0.88, H(Rain|NoCloud)=0.29.<br/>期望 H = 0.8 × 0.88 + 0.2 × 0.29 = 0.76 bits。"
     },
     {
         "topic": "Information Gain (Q8)",
         "question_en": "Define Information Gain.",
         "question_cn": "定义信息增益。",
-        "solution_en": "Expected reduction in entropy given new information: $H(X) - H(X|Y)$.",
-        "solution_cn": "给定新信息后的预期熵减少量：$H(X) - H(X|Y)$。"
+        "solution_en": "Expected reduction in entropy given new information: H(X) - H(X|Y).",
+        "solution_cn": "给定新信息后的预期熵减少量：H(X) - H(X|Y)。"
     },
     {
         "topic": "Confusion Matrix (ML Q2)",
         "question_en": "Draw confusion matrix. 10 Bees (7 correct, 2 wasp, 1 fly). 5 Wasps (all correct). 8 Flies (4 correct, 4 wasp).",
         "question_cn": "绘制混淆矩阵。10只蜜蜂（7只正确，2只黄蜂，1只苍蝇）。5只黄蜂（全部正确）。8只苍蝇（4只正确，4只黄蜂）。",
-        "solution_en": "Rows(True)/Cols(Pred): Bee:[7,2,1], Wasp:[0,5,0], Fly:[0,4,4].",
-        "solution_cn": "行(真实)/列(预测): 蜜蜂:[7,2,1], 黄蜂:[0,5,0], 苍蝇:[0,4,4]。(见PDF表格)"
+        "solution_en": "Rows(True)/Cols(Pred):<br/>Bee: [7,2,1]<br/>Wasp: [0,5,0]<br/>Fly: [0,4,4]",
+        "solution_cn": "行(真实)/列(预测):<br/>蜜蜂: [7,2,1]<br/>黄蜂: [0,5,0]<br/>苍蝇: [0,4,4]"
     },
     {
         "topic": "Time Series Validation (ML Q3)",
         "question_en": "Traffic prediction using random cross-validation works well. (a) Problem? (b) Solution?",
         "question_cn": "使用随机交叉验证的交通预测效果很好。(a) 问题？(b) 解决方案？",
-        "solution_en": "(a) Neighbouring times highly correlated (data leakage). (b) Use time-series split (train past, test future) or different days.",
-        "solution_cn": "(a) 相邻时间高度相关（数据泄漏）。(b) 使用时间序列分割（训练过去，测试未来）或不同的日期。"
+        "solution_en": "(a) Neighbouring times highly correlated (data leakage).<br/>(b) Use time-series split (train past, test future) or different days.",
+        "solution_cn": "(a) 相邻时间高度相关（数据泄漏）。<br/>(b) 使用时间序列分割（训练过去，测试未来）或不同的日期。"
     },
     {
         "topic": "Decision Trees - Purity (Q1)",
@@ -178,8 +178,8 @@
         "topic": "Information Gain Calculation (DT Q2)",
         "question_en": "Calculate Information Gain for 'vibration' feature. 16 turbines, H[state]=0.95. Vib: 8 (5 fail, 3 ok). No Vib: 8 (1 fail, 7 ok).",
         "question_cn": "计算“振动”特征的信息增益。16台涡轮机，H[state]=0.95。振动：8（5故障，3正常）。无振动：8（1故障，7正常）。",
-        "solution_en": "H[state|vib] = 0.75. IG = 0.95 - 0.75 = 0.2 bits.",
-        "solution_cn": "H[state|vib] = 0.75. IG = 0.95 - 0.75 = 0.2 bits。"
+        "solution_en": "H[state|vib] = 0.75.<br/>IG = 0.95 - 0.75 = 0.2 bits.",
+        "solution_cn": "H[state|vib] = 0.75.<br/>IG = 0.95 - 0.75 = 0.2 bits。"
     },
     {
         "topic": "Overfitting in Trees (DT Q3)",
@@ -199,50 +199,50 @@
         "topic": "Random Forest Steps (Ens Q2)",
         "question_en": "Explain Random Forest algorithm.",
         "question_cn": "解释随机森林算法。",
-        "solution_en": "1. Bootstrap samples. 2. Build trees. 3. Subspace sampling (random feature subset) at each split. 4. Aggregate predictions.",
-        "solution_cn": "1. Bootstrap 采样。2. 构建树。3. 每个分裂处的子空间采样（随机特征子集）。4. 聚合预测。"
+        "solution_en": "1. Bootstrap samples.<br/>2. Build trees.<br/>3. Subspace sampling (random feature subset) at each split.<br/>4. Aggregate predictions.",
+        "solution_cn": "1. Bootstrap 采样。<br/>2. 构建树。<br/>3. 每个分裂处的子空间采样（随机特征子集）。<br/>4. 聚合预测。"
     },
     {
         "topic": "Linear Regression SSE (LR Q1)",
         "question_en": "Write sum-squared error (SSE) in vector notation.",
         "question_cn": "用向量符号写出平方误差和 (SSE)。",
-        "solution_en": "$(y - Xw)^T(y - Xw)$.",
-        "solution_cn": "$(y - Xw)^T(y - Xw)$。"
+        "solution_en": "(y - Xw)<super>T</super>(y - Xw).",
+        "solution_cn": "(y - Xw)<super>T</super>(y - Xw)。"
     },
     {
         "topic": "Mean Absolute Error (LR Q2)",
         "question_en": "Expression for Mean Absolute Error.",
         "question_cn": "平均绝对误差的表达式。",
-        "solution_en": "$\\frac{1}{N} \\sum |y_i - [X]_{i:}w|$.",
-        "solution_cn": "$\\frac{1}{N} \\sum |y_i - [X]_{i:}w|$。"
+        "solution_en": "1/N ∑ |y<sub>i</sub> - [X]<sub>i:</sub>w|.",
+        "solution_cn": "1/N ∑ |y<sub>i</sub> - [X]<sub>i:</sub>w|。"
     },
     {
         "topic": "Gradients (LR Q3)",
         "question_en": "Differentiate SSE and MAE wrt w.",
         "question_cn": "对 SSE 和 MAE 关于 w 求导。",
-        "solution_en": "SSE grad: $-2X^T(y - Xw)$. MAE grad involves sign function: $-\\frac{1}{N} \\sum [X]_{i:} \\text{sgn}(y_i - [X]_{i:}w)$.",
-        "solution_cn": "SSE 梯度：$-2X^T(y - Xw)$。MAE 梯度涉及符号函数：$-\\frac{1}{N} \\sum [X]_{i:} \\text{sgn}(y_i - [X]_{i:}w)$。"
+        "solution_en": "SSE grad: -2X<super>T</super>(y - Xw).<br/>MAE grad: -1/N ∑ [X]<sub>i:</sub> sgn(y<sub>i</sub> - [X]<sub>i:</sub>w).",
+        "solution_cn": "SSE 梯度：-2X<super>T</super>(y - Xw)。<br/>MAE 梯度：-1/N ∑ [X]<sub>i:</sub> sgn(y<sub>i</sub> - [X]<sub>i:</sub>w)。"
     },
     {
         "topic": "Design Matrix (LR Q5)",
         "question_en": "Design matrix for 3rd order polynomial with inputs 2, 3, 4, 6, 8.",
         "question_cn": "输入为 2, 3, 4, 6, 8 的 3 阶多项式的设计矩阵。",
-        "solution_en": "Rows are $[1, x, x^2, x^3]$. E.g., row 1: $[1, 2, 4, 8]$.",
-        "solution_cn": "行是 $[1, x, x^2, x^3]$。例如，第 1 行：$[1, 2, 4, 8]$。"
+        "solution_en": "Rows are [1, x, x<super>2</super>, x<super>3</super>].<br/>E.g., row 1: [1, 2, 4, 8].",
+        "solution_cn": "行是 [1, x, x<super>2</super>, x<super>3</super>]。<br/>例如，第 1 行：[1, 2, 4, 8]。"
     },
     {
         "topic": "L2 Regularization (LR Q6)",
         "question_en": "What to add to cost function for L2 regularization?",
         "question_cn": "为了 L2 正则化，需要在成本函数中添加什么？",
-        "solution_en": "Add $\\lambda w^T w$.",
-        "solution_cn": "添加 $\\lambda w^T w$。"
+        "solution_en": "Add λw<super>T</super> w.",
+        "solution_cn": "添加 λw<super>T</super> w。"
     },
     {
         "topic": "Gaussian Process Covariance (GP Q1)",
-        "question_en": "Exponential kernel $k(x,x')=e^{-|x-x'|/10}$. Train: (1,2), (3,4). Test: 2. Compute $k_{*f}$ and $K_{ff}$.",
-        "question_cn": "指数核 $k(x,x')=e^{-|x-x'|/10}$。训练点：(1,2), (3,4)。测试点：2。计算 $k_{*f}$ 和 $K_{ff}$。",
-        "solution_en": "$k_{*f} \\approx [0.90, 0.90]$. $K_{ff} \\approx [[1, 0.82], [0.82, 1]]$. Posterior mean $\\approx 2.99$.",
-        "solution_cn": "$k_{*f} \\approx [0.90, 0.90]$. $K_{ff} \\approx [[1, 0.82], [0.82, 1]]$. 后验均值 $\\approx 2.99$。"
+        "question_en": "Exponential kernel k(x,x')=e<super>-|x-x'|/10</super>. Train: (1,2), (3,4). Test: 2. Compute k<sub>*f</sub> and K<sub>ff</sub>.",
+        "question_cn": "指数核 k(x,x')=e<super>-|x-x'|/10</super>。训练点：(1,2), (3,4)。测试点：2。计算 k<sub>*f</sub> 和 K<sub>ff</sub>。",
+        "solution_en": "k<sub>*f</sub> ≈ [0.90, 0.90].<br/>K<sub>ff</sub> ≈ [[1, 0.82], [0.82, 1]].<br/>Posterior mean ≈ 2.99.",
+        "solution_cn": "k<sub>*f</sub> ≈ [0.90, 0.90].<br/>K<sub>ff</sub> ≈ [[1, 0.82], [0.82, 1]].<br/>后验均值 ≈ 2.99。"
     },
     {
         "topic": "GP Definition (GP Q4)",

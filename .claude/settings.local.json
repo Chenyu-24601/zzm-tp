@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(ls:*)",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lectrue1/lecture1_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lectrue1/lecture1_复习笔记_基础版.html\")",
+      "Bash(open:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lecture2/lecture2_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lecture2/lecture2_复习笔记_基础版.html\")",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lecture3/lecture3_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lecture3/lecture3_复习笔记_基础版.html\")",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lecture4/lecture4_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lecture4/lecture4_复习笔记_基础版.html\")",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lecture5/lecture5_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lecture5/lecture5_复习笔记_基础版.html\")",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lecture6/lecture6_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lecture6/lecture6_复习笔记_基础版.html\")",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lecture7/lecture7_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lecture7/lecture7_复习笔记_基础版.html\")",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"/Users/ml/Downloads/zzm/TP-Lab/lecture8/lecture8_复习笔记_基础版.pdf\" --print-to-pdf-no-header \"file:///Users/ml/Downloads/zzm/TP-Lab/lecture8/lecture8_复习笔记_基础版.html\")"
+    ]
+  }
+}

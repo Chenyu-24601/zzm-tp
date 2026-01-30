@@ -1,0 +1,30 @@
+[
+    {
+        "topic": "Sentiment Analysis (Graded)",
+        "question_en": "Calculate the sentiment score of the tweet: 'The service was not very good.'\n\nGiven Lexicon:\n- good: +2\n- service: 0 (neutral)\n\nRules:\n1. 'very' (intensifier): increases the score of the next word by 50%.\n2. 'not' (negator): multiplies the score of the following phrase by -0.8.",
+        "solution_en": "1. **Identify Sentiment Words**: 'good' (+2).\n2. **Apply Intensifier**: 'very' modifies 'good'.\n   Score('very good') = Score('good') * 1.5 = 2 * 1.5 = 3.\n3. **Apply Negation**: 'not' modifies 'very good'.\n   Score('not very good') = Score('very good') * -0.8 = 3 * -0.8 = -2.4.\n\n**Final Score**: -2.4.",
+        "question_cn": "计算推文 Sentiemnt 分数：'The service was not very good.'\n\n给定词典：\n- good: +2\n- service: 0 (中性)\n\n规则：\n1. 'very' (加强词): 将下一个词的分数增加 50%。\n2. 'not' (否定词): 将后续短语的分数乘以 -0.8。",
+        "solution_cn": "1. **识别情感词**: 'good' (+2)。\n2. **应用加强词**: 'very' 修饰 'good'。\n   分数('very good') = 分数('good') * 1.5 = 2 * 1.5 = 3。\n3. **应用否定词**: 'not' 修饰 'very good'。\n   分数('not very good') = 分数('very good') * -0.8 = 3 * -0.8 = -2.4。\n\n**最终分数**: -2.4。"
+    },
+    {
+        "topic": "Pointwise Mutual Information (PMI)",
+        "question_en": "Calculate PMI(coffee, cup).\n\nCorpus Statistics:\n- Total word pairs ($N$): 10,000\n- Count('coffee') ($c_x$): 100\n- Count('cup') ($c_y$): 200\n- Count('coffee', 'cup') co-occurrence ($c_{xy}$): 20",
+        "solution_en": "Formula: $PMI(x, y) = \\log_2 \\frac{P(x,y)}{P(x)P(y)}$\n\n1. **Calculate Probabilities**:\n   $P(x) = 100 / 10000 = 0.01$\n   $P(y) = 200 / 10000 = 0.02$\n   $P(x,y) = 20 / 10000 = 0.002$\n\n2. **Compute Ratio**:\n   $\\frac{0.002}{0.01 \\times 0.02} = \\frac{0.002}{0.0002} = 10$\n\n3. **Logarithm**:\n   $PMI = \\log_2(10) \\approx 3.32$",
+        "question_cn": "计算 PMI(coffee, cup)。\n\n语料库统计：\n- 总词对数 ($N$): 10,000\n- Count('coffee') ($c_x$): 100\n- Count('cup') ($c_y$): 200\n- Count('coffee', 'cup') 共现 ($c_{xy}$): 20",
+        "solution_cn": "公式: $PMI(x, y) = \\log_2 \\frac{P(x,y)}{P(x)P(y)}$\n\n1. **计算概率**:\n   $P(x) = 100 / 10000 = 0.01$\n   $P(y) = 200 / 10000 = 0.02$\n   $P(x,y) = 20 / 10000 = 0.002$\n\n2. **计算比率**:\n   $\\frac{0.002}{0.01 \\times 0.02} = \\frac{0.002}{0.0002} = 10$\n\n3. **取对数**:\n   $PMI = \\log_2(10) \\approx 3.32$"
+    },
+    {
+        "topic": "Naive POS Tagging",
+        "question_en": "Tag the word 'tweeted' in the sentence 'He tweeted.'\n\nTraining Data:\n- 'tweet': {Verb: 10, Noun: 2}\n- 'tweeted': Not in training data (Unknown)\n\nRules for Unknown Words:\n1. If capitalized -> NNP (Proper Noun)\n2. If ends with 'ed' -> VBD (Past Tense Verb)\n3. Default -> NN (Noun)",
+        "solution_en": "1. **Lookup**: Check 'tweeted' in the training dictionary. **Result**: Not found (Unknown).\n\n2. **Apply Unknown Word Rules** (in order):\n   - Is it capitalized? No ('t' is lowercase).\n   - Does it end with 'ed'? **Yes**.\n\n3. **Conclusion**: Assign tag **VBD** based on the suffix rule.",
+        "question_cn": "为句子 'He tweeted' 中的 'tweeted' 标注词性。\n\n训练数据：\n- 'tweet': {Verb: 10, Noun: 2}\n- 'tweeted': 不在训练数据中 (未知词)\n\n未知词规则：\n1. 如果首字母大写 -> NNP (专有名词)\n2. 如果以 'ed' 结尾 -> VBD (过去式动词)\n3. 默认 -> NN (名词)",
+        "solution_cn": "1. **查找**: 在训练字典中查找 'tweeted'。**结果**: 未找到 (未知词)。\n\n2. **应用未知词规则** (按顺序):\n   - 首字母大写吗？ 否 ('t' 小写)。\n   - 以 'ed' 结尾吗？ **是**。\n\n3. **结论**: 根据后缀规则标记为 **VBD**。"
+    },
+    {
+        "topic": "Jaccard Similarity",
+        "question_en": "Calculate the Jaccard Similarity between Doc A and Doc B.\n\n- Doc A: 'apple banana apple'\n- Doc B: 'apple orange banana'",
+        "solution_en": "1. **Create Sets** (Unique words):\n   $Set(A) = \\{\\text{'apple', 'banana'}\\}$\n   $Set(B) = \\{\\text{'apple', 'orange', 'banana'}\\}$\n\n2. **Intersection** ($A \\cap B$):\n   Words in both: 'apple', 'banana'. Count = 2.\n\n3. **Union** ($A \\cup B$):\n   All unique words: 'apple', 'banana', 'orange'. Count = 3.\n\n4. **Calculate Jaccard**:\n   $J(A,B) = \\frac{|A \\cap B|}{|A \\cup B|} = \\frac{2}{3} \\approx 0.67$",
+        "question_cn": "计算文档 A 和文档 B 的 Jaccard 相似度。\n\n- Doc A: 'apple banana apple'\n- Doc B: 'apple orange banana'",
+        "solution_cn": "1. **创建集合** (唯一词):\n   $Set(A) = \\{\\text{'apple', 'banana'}\\}$\n   $Set(B) = \\{\\text{'apple', 'orange', 'banana'}\\}$\n\n2. **交集** ($A \\cap B$):\n   两者都有的词: 'apple', 'banana'。数量 = 2。\n\n3. **并集** ($A \\cup B$):\n   所有唯一词: 'apple', 'banana', 'orange'。数量 = 3。\n\n4. **计算 Jaccard**:\n   $J(A,B) = \\frac{|A \\cap B|}{|A \\cup B|} = \\frac{2}{3} \\approx 0.67$"
+    }
+]

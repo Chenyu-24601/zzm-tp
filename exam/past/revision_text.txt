@@ -1,0 +1,310 @@
+--- START OF /Users/ml/Downloads/zzm/Revision 1-6.pdf ---
+Page 1:
+COM6115: Text Processing
+Weeks 1-6 Revision
+Varvara Papazoglou
+
+
+Page 2:
+Week 1
+Intro to Text Processing
+2
+
+Page 3:
+Wooclap – Text preprocessing tasks (Weeks 1 & 5)
+3
+
+
+Page 4:
+Weeks 2-3
+Text Encoding &
+Text Compression
+4
+
+Page 5:
+Character Encoding
+● American Standard Code for Information Interchange (ASCII)
+○ 7-bit code 
+○ Introduced in 1963, finalised in 1968
+○ Not suﬀicient for several Western European languages
+■ Additional accents and symbols
+● Unicode Transformation Format (UTF)
+○ UTF-32:   32-bit (4-byte) code unit length
+○ UTF-16:   16-bit (2-byte) code unit length
+○ UTF-8:   1-4 bytes (variable code unit length) 5
+
+Page 6:
+Wooclap – Encodings
+6
+
+
+Page 7:
+Compression
+● Lossless Compression:
+○ class of algorithms allowing original data to be perfectly 
+reconstructed from compressed data
+● Lossy Compression:
+○ achieve data reduction by discarding (i.e. losing) information
+○ suitable for certain media types, esp.: image / video / audio data
+○ widely used in data streaming contexts
+7
+Suitable for text!
+
+Page 8:
+8
+https://www.newyorker.com/tech/annals-of-technology/chatgpt-is-a-blurry-jpeg-of-the-web
+https://blog.domenic.me/chatgpt-simulacrum/
+
+Page 9:
+Additional Resources
+● Language Modelling is Compression (Delétang et al., 2024)
+● LLMZip: Lossless Text Compression using Large Language Models 
+(Valmeekam et al., 2023)
+● Semantic and Generative Models for Lossy Text Compression 
+(Witten et al., 1994)
+9
+
+Page 10:
+Text compression techniques
+● symbolwise vs. dictionary methods
+○ Symbolwise: estimate the probabilities of symbols (characters/words); code one 
+symbol at a time using shorter codewords for the more likely symbols
+○ Dictionary:  replace substrings in a text with codewords/indices that identify the 
+substring in a dictionary
+● static vs. adaptive methods
+○ Static: pre-defined model/dictionary for all texts
+○ Semi-static: derives model/dictionary for the file in a 1st pass; applies it in a 2nd pass
+○ Adaptive: builds model/dictionary adaptively in 1 pass
+10
+
+Page 11:
+Huﬀman coding
+● Encoding:
+○ Given the estimated probability of symbols, build the coding 
+tree.
+■ Start from the leave nodes.
+● Decoding:
+○ Given the coding tree (which is prefix-free), decode the 
+sequence of integers into the corresponding symbols.
+■ Start from the root to determine which codeword 
+corresponds to each symbol.
+11
+
+Page 12:
+12
+Test your understanding:
+1. Encode
+a. “ddef”
+b. “cab”
+
+Page 13:
+13
+Test your understanding:
+1. Encode
+a. “ddef”
+010110110
+b. “cab”
+00100000001
+
+Page 14:
+14
+Test your understanding:
+2.    Decode
+a. 0001000001
+b. 1111101001
+
+
+Page 15:
+15
+Test your understanding:
+2.    Decode
+a. 0001000001
+“bad”
+b. 1111101001
+“gfed”
+
+Page 16:
+Canonical Huﬀman Codes
+● Encoding:
+○ Given the length of the codewords, group symbols by their 
+code-length
+○ Assign codes
+Example:
+[2]   d    e       [3]    c         f        g           [4]     a           b
+       00  01             100   101   110              1110   1111
+16
+
+Page 17:
+Canonical Huﬀman Codes
+● Decoding:
+○ Given the sequence of symbols & number of symbols at each 
+code-length, form the symbol groups
+Example:
+d e c f g a b,   (0, 2, 3, 2)
+17
+
+Page 18:
+Canonical Huﬀman Codes
+● Decoding:
+○ Given the sequence of symbols & number of symbols at each 
+code-length, form the symbol groups
+Example:
+d e c f g a b,   (0, 2, 3, 2)
+[1] -    [2] d e   [3] c f g   [4] a b
+18
+
+Page 19:
+Canonical Huﬀman Codes
+● Decoding:
+○ Given the sequence of symbols & number of symbols at each 
+code-length, form the symbol groups
+Example:
+d e c f g a b,   (0, 2, 3, 2)
+[1] -    [2] d e   [3] c f g   [4] a b
+[2]   d    e       [3]    c         f        g           [4]     a           b
+       00  01             100   101   110              1110   1111 19
+
+Page 20:
+Arithmetic Coding
+● Given: the static model of probabilities and the string to be encoded
+● Divide the intervals between 0-1
+● Represent the codewords as a stream of bits, which is actually 
+expressed as a fractional binary number between 0 and 1
+20
+
+Page 21:
+Arithmetic Coding
+21
+Test your understanding:
+This is how you can encode 
+“bab” → 101 (0.625), given
+Pr(a) = 0.5   Pr(b) = 0.4   Pr(c) = 0.1
+1. Why is “bb” → 11 ?
+2. Why is 1011 → “bac” ?
+
+
+Page 22:
+Arithmetic Coding
+22
+Test your understanding:
+This is how you can encode 
+“bab” → 101 (0.625), given
+Pr(a) = 0.5   Pr(b) = 0.4   Pr(c) = 0.1
+1. Why is “bb” → 11 ?
+11 → 0.11 → ½ + ¼ = 0.75
+2. Why is 1011 → “bac” ?
+½ + ⅛ + 1/16 = 0.688
+
+
+Page 23:
+LZ77
+23
+
+
+Page 24:
+Weeks 4-5
+Information Retrieval
+24
+
+Page 25:
+Retrieval Models
+● the Boolean Model
+■ each document in a collection is either relevant to a given query or not relevant to that query
+■ queries are formulated using boolean operators (AND, OR, NOT) between terms
+● the Vector Space Model
+■ each document in a collection has some degree of relevance to query
+■ documents and queries are both represented as vectors of the terms occurring within them
+■ degree of similarity computed as cosine of angle between document and query vectors
+● the Probabilistic Model
+■ ranked retrieval model like the vector space model
+■ relatedness of document to query measured as the probability that a document is relevant to 
+a given query 25
+
+Page 26:
+Retrieval Models
+● the Boolean Model
+■ each document in a collection is either relevant to a given query or not relevant to that query
+■ queries are formulated using boolean operators (AND, OR, NOT) between terms
+● the Vector Space Model
+■ each document in a collection has some degree of relevance to query
+■ documents and queries are both represented as vectors of the terms occurring within them
+■ degree of similarity computed as cosine of angle between document and query vectors
+● the Probabilistic Model
+■ ranked retrieval model like the vector space model
+■ relatedness of document to query measured as the probability that a document is relevant to 
+a given query 26
+
+Page 27:
+Term weighting
+● Binary weighting
+● tf
+● tf.idf
+→ Why is each of the above increasingly ʻbetterʼ for IR?
+27
+
+Page 28:
+Wooclap – IR
+28
+
+
+Page 29:
+29
+
+--- END OF /Users/ml/Downloads/zzm/Revision 1-6.pdf ---
+
+--- START OF /Users/ml/Downloads/zzm/COM6115 (from week 7 to week 11).pdf ---
+Page 1:
+COM6115 Text Processing (Autumn 
+semester 2024-25)
+Week 7 to week 11 recap
+1. Why is Sentiment Analysis a relevant task in text processing? 
+2. Cite examples of “target of opinions”? 
+3. Give examples of factual (objective) and subjective sentences.
+4. Map the following example to Bing Liu’s model: “I really hated the new Brooks shoes. 
+The material seems cheap and the colour is very ugly. It is also extremely overpriced 
+in comparison to previous editions” Jane Doe, 11th December 2023.
+5. Explain the different granularity levels of sentiment analysis.
+6. How does the binary lexicon-based approach to sentiment analysis work? 
+7. Which are the extra rules proposed for the gradable/graded lexicon-based approach? 
+8. Using the gradable/graded lexicon-based approach, classify the following sentences 
+in positive, negative or neutral:
+a. The book is a very good read. 
+b. The new iPhone is not pretty. 
+c. I am feeling TERRIBLE today. 
+Lexicon
+good 2
+pretty 2
+terrible -3
+Intersifier
+very 1
+9. Which are the five rules in VADER? Explain the rule for contrastive conjunction in 
+detail. 
+10. Give the following training data, with the words highlighted used as features: 
+
+Page 2:
+Calculate the the sentiment of “A not surprising  thriller, with so many unfunny  and 
+awkward
+ moments” using: 
+a. Multinomial Naive Bayes (without Laplace smoothing)
+b. Multinomial Naive Bayes with Laplace smoothing
+c. Binary Naives Bayes
+11. Cite ways to improve the Naive Bayes approach? 
+12. Explain how we can evaluate a Naive Bayes classifier? 
+13. Explain relation extraction. Which are the three types of information that can be 
+extracted? 
+14. Give examples of classes for Named Entity Recognition (NER). 
+15. Given the sentence “Google’s founder, Sergey Brin is also an employee at Alphabet”, 
+which relations can be extracted? 
+16. Which are the four stages of Wakao et al. NER system? 
+17. Explain the BIO annotation. How would the following sentence be annotated? 
+“The Rock visited London for his new movie and was seen near the Tower of London 
+and the Shard”
+18. Cite some features that can be used for BIO classification.
+19. Explain the steps of the DIPRE algorithm. 
+20. Based on the diagram illustrating the word2vec model presented in class, which 
+component is the word embeddings matrix? 
+21. Why is negative sampling applied in the context of the word2vec model? 
+
+
+--- END OF /Users/ml/Downloads/zzm/COM6115 (from week 7 to week 11).pdf ---
+
