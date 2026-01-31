@@ -30,7 +30,8 @@ def generate_pdf():
     with open('revision_questions.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    doc = SimpleDocTemplate("Bilingual_Revision_Summary_v2.pdf", pagesize=A4, 
+
+    doc = SimpleDocTemplate("Bilingual_Revision_Summary_v3.pdf", pagesize=A4, 
                             rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     story = []
 
@@ -45,6 +46,16 @@ def generate_pdf():
                                  spaceAfter=20,
                                  textColor=colors.HexColor("#2c3e50"))
     
+    style_part_header = ParagraphStyle('PartHeader',
+                                      parent=styles['Heading1'],
+                                      fontName=font_name,
+                                      fontSize=20,
+                                      leading=24,
+                                      textColor=colors.HexColor("#c0392b"),
+                                      spaceBefore=20,
+                                      spaceAfter=20,
+                                      alignment=1) # Center
+
     style_topic_header = ParagraphStyle('TopicHeader',
                                       parent=styles['Heading2'],
                                       fontName=font_name,
@@ -68,7 +79,7 @@ def generate_pdf():
                                       fontName=font_name,
                                       fontSize=10,
                                       leading=14,
-                                      textColor=colors.HexColor("#555555")) # Slightly lighter for contrast or distinctness if needed
+                                      textColor=colors.HexColor("#555555"))
 
     style_label_q = ParagraphStyle('LabelQ',
                                    parent=styles['Normal'],
@@ -84,30 +95,35 @@ def generate_pdf():
                                    spaceAfter=2)
 
 
-    story.append(Paragraph("Machine Learning Revision Summary (Comprehensive)", style_title))
-    story.append(Paragraph("Covers material from Revision Worksheet Part 2 and Part 1 Solutions", style_content_en))
+    story.append(Paragraph("Machine Learning Revision Summary (Comprehensive v3)", style_title))
+    story.append(Paragraph("Covers Part 1 (Basics) and Part 2 (Advanced).", style_content_en))
     story.append(Spacer(1, 20))
 
-    col_width = 270 # A4 width is ~595. Margins 20+20=40. Content=555. 555/2 = 277.
+    col_width = 270
 
     for idx, item in enumerate(data):
         topic = item.get('topic', 'Untitled Question')
         
+        # Check for Section Header
+        if item.get('question_en') == "SECTION HEADER":
+            story.append(PageBreak())
+            story.append(Paragraph(topic, style_part_header))
+            continue
+
         # 1. Topic Header (Full Width)
         story.append(KeepTogether([
-            Paragraph(f"{idx+1}. {topic}", style_topic_header),
+            Paragraph(f"{topic}", style_topic_header),
         ]))
 
         # Prepare Content
+        # Use simple replaces, if it was unicode, it should render fine.
+        # If we used <super>, it is compatible with ReportLab
         q_en_text = item['question_en'].replace('\n', '<br/>')
         q_cn_text = item['question_cn'].replace('\n', '<br/>')
         s_en_text = item['solution_en'].replace('\n', '<br/>')
         s_cn_text = item['solution_cn'].replace('\n', '<br/>')
 
         # 2. Question Block
-        # We will use a Table for the Question part (Left En, Right Cn)
-        # Style: Light Blue Background
-        
         q_content = [
             [Paragraph("<b>Question (English)</b>", style_label_q), Paragraph("<b>题目 (中文)</b>", style_label_q)],
             [Paragraph(q_en_text, style_content_en), Paragraph(q_cn_text, style_content_cn)]
@@ -121,11 +137,10 @@ def generate_pdf():
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
             ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.white), # White grid for clean look
+            ('GRID', (0,0), (-1,-1), 0.5, colors.white),
         ]))
 
         # 3. Solution Block
-        # Style: Light Green Background
         s_content = [
             [Paragraph("<b>Solution</b>", style_label_s), Paragraph("<b>解答</b>", style_label_s)],
             [Paragraph(s_en_text, style_content_en), Paragraph(s_cn_text, style_content_cn)]
@@ -150,7 +165,8 @@ def generate_pdf():
         story.append(Spacer(1, 12))
 
     doc.build(story)
-    print("PDF Generated: Bilingual_Revision_Summary_v2.pdf")
+    print("PDF Generated: Bilingual_Revision_Summary_v3.pdf")
+
 
 if __name__ == "__main__":
     generate_pdf()
